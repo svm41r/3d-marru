@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>KARACHI NIGHTS: Director's Cut (Working Car Controls)</title>
+  <title>KARACHI NIGHTS: Ishq, Dhokha & Badla</title>
   <style>
     * {
       box-sizing: border-box;
@@ -17,7 +17,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #03050a;
+      background: #04060c;
       color: #fff;
     }
     #game-canvas {
@@ -26,19 +26,12 @@
       display: block;
     }
 
-    /* Cinematic Vignette & Letterbox */
-    #vignette {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: radial-gradient(circle at center, transparent 55%, rgba(0, 0, 0, 0.75) 100%);
-      z-index: 10;
-    }
+    /* ================= CINEMATIC LETTERBOX & TITLE SCREEN ================= */
     .letterbox {
       position: absolute;
       left: 0;
       width: 100%;
-      height: 0;
+      height: 0px;
       background: #000;
       z-index: 15;
       transition: height 0.45s cubic-bezier(0.4, 0, 0.2, 1);
@@ -46,227 +39,218 @@
     }
     #lb-top { top: 0; }
     #lb-bottom { bottom: 0; }
-    body.cutscene-active #lb-top,
-    body.cutscene-active #lb-bottom {
-      height: 10.5vh;
+    body.cutscene-mode #lb-top,
+    body.cutscene-mode #lb-bottom {
+      height: 11vh;
     }
 
-    /* TITLE SCREEN */
     #title-screen {
       position: absolute;
       inset: 0;
-      background: linear-gradient(90deg, rgba(3, 5, 10, 0.94) 0%, rgba(3, 5, 10, 0.72) 55%, rgba(3, 5, 10, 0.25) 100%);
+      background: radial-gradient(circle at 70% 40%, rgba(15, 23, 42, 0.35), rgba(4, 6, 12, 0.94));
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 0 6vw;
+      padding: 0 7vw;
       z-index: 50;
-      transition: opacity 0.45s ease;
+      transition: opacity 0.5s ease;
     }
-    .tag-pill {
+    .game-badge {
+      display: inline-block;
       width: fit-content;
-      background: rgba(225, 29, 72, 0.22);
-      border: 1px solid #f43f5e;
-      color: #fda4af;
-      font-size: 11.5px;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      font-size: 12px;
       font-weight: 800;
       letter-spacing: 2px;
       padding: 5px 12px;
       border-radius: 4px;
-      text-transform: uppercase;
       margin-bottom: 12px;
-    }
-    .hero-title {
-      font-size: clamp(34px, 5.8vw, 72px);
-      font-weight: 900;
-      line-height: 0.94;
-      letter-spacing: -1.5px;
       text-transform: uppercase;
-      background: linear-gradient(95deg, #ffffff 0%, #93c5fd 55%, #f43f5e 100%);
+    }
+    .main-title {
+      font-size: clamp(36px, 6vw, 72px);
+      font-weight: 900;
+      line-height: 0.95;
+      letter-spacing: -1px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #ffffff, #93c5fd, #f43f5e);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
-    .hero-desc {
-      max-width: 580px;
-      font-size: clamp(14px, 1.6vw, 17.5px);
-      color: #cbd5e1;
-      line-height: 1.55;
-      margin-bottom: 24px;
-    }
-    .chapter-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 10px;
-      max-width: 740px;
-    }
-    .chap-btn {
-      padding: 13px 16px;
-      background: rgba(15, 23, 42, 0.86);
-      border: 1.5px solid rgba(148, 163, 184, 0.3);
-      border-radius: 8px;
-      color: #f8fafc;
-      font-size: 13px;
-      font-weight: 800;
-      text-align: left;
-      cursor: pointer;
-      transition: all 0.18s ease;
-    }
-    .chap-btn span {
-      display: block;
-      font-size: 10.5px;
+    .sub-title {
+      font-size: clamp(15px, 2vw, 20px);
       color: #94a3b8;
-      font-weight: 600;
-      margin-top: 3px;
+      max-width: 560px;
+      line-height: 1.5;
+      margin-bottom: 28px;
     }
-    .chap-btn.primary {
-      background: linear-gradient(135deg, #e11d48, #9f1239);
+    .menu-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      max-width: 680px;
+    }
+    .menu-btn {
+      padding: 14px 26px;
+      font-size: 15px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      background: rgba(15, 23, 42, 0.85);
+      color: #f8fafc;
+    }
+    .menu-btn.primary {
+      background: linear-gradient(135deg, #e11d48, #be123c);
       border-color: #fda4af;
-      box-shadow: 0 0 28px rgba(225, 29, 72, 0.45);
+      box-shadow: 0 0 30px rgba(225, 29, 72, 0.5);
     }
-    .chap-btn.primary span {
-      color: #ffe4e6;
-    }
-    .chap-btn:hover {
+    .menu-btn:hover {
       transform: translateY(-2px);
       border-color: #fff;
     }
 
-    /* CUTSCENE DIALOGUE BOX */
-    #cutscene-box {
+    /* ================= CUTSCENE DIALOGUE UI ================= */
+    #cutscene-ui {
       position: absolute;
-      bottom: 2.8vh;
+      bottom: 3vh;
       left: 50%;
       transform: translateX(-50%);
-      width: min(94%, 840px);
-      background: linear-gradient(180deg, rgba(10, 14, 26, 0.94), rgba(3, 5, 10, 0.98));
-      border: 1px solid rgba(148, 163, 184, 0.35);
+      width: min(92%, 780px);
+      background: linear-gradient(180deg, rgba(9, 13, 24, 0.92), rgba(4, 6, 12, 0.98));
+      border: 1px solid rgba(148, 163, 184, 0.3);
       border-left: 5px solid #e11d48;
       border-radius: 10px;
       padding: 18px 24px;
-      z-index: 35;
+      z-index: 30;
       display: none;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
     }
-    .cs-header {
+    .cs-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 7px;
+      margin-bottom: 6px;
     }
     #cs-speaker {
       font-size: 14px;
       font-weight: 900;
-      letter-spacing: 1.4px;
       text-transform: uppercase;
+      letter-spacing: 1.5px;
       color: #fbbf24;
     }
-    #cs-meta {
+    #cs-chapter-tag {
       font-size: 11px;
-      font-weight: 700;
       color: #64748b;
-      letter-spacing: 1px;
+      font-weight: 700;
       text-transform: uppercase;
+      letter-spacing: 1px;
     }
-    #cs-body {
-      font-size: 16.5px;
+    #cs-text {
+      font-size: 17px;
       line-height: 1.55;
       color: #f1f5f9;
-      min-height: 52px;
+      min-height: 50px;
       margin-bottom: 14px;
     }
-    .cs-actions {
+    .cs-footer {
       display: flex;
       justify-content: flex-end;
       gap: 10px;
-      flex-wrap: wrap;
     }
     .cs-btn {
       background: #1e293b;
       border: 1px solid #475569;
       color: #fff;
-      padding: 9px 18px;
+      padding: 8px 18px;
       border-radius: 6px;
       font-size: 13px;
       font-weight: 800;
       cursor: pointer;
+      transition: background 0.15s;
     }
-    .cs-btn.cta {
-      background: linear-gradient(135deg, #e11d48, #be123c);
-      border-color: #fda4af;
+    .cs-btn.next {
+      background: #e11d48;
+      border-color: #fb7185;
     }
     .cs-btn:hover {
       filter: brightness(1.15);
     }
 
-    /* DRIVING HUD */
+    /* ================= CHAPTER 1: HIGHWAY DRIVE HUD ================= */
     #drive-hud {
       position: absolute;
-      top: 16px;
+      top: 18px;
       left: 50%;
       transform: translateX(-50%);
-      width: min(94%, 680px);
+      width: min(94%, 640px);
       background: rgba(9, 13, 24, 0.88);
-      border: 1.5px solid rgba(56, 189, 248, 0.45);
+      border: 1.5px solid rgba(59, 130, 246, 0.5);
       border-radius: 12px;
-      padding: 12px 18px;
+      padding: 12px 20px;
       z-index: 25;
       display: none;
       backdrop-filter: blur(8px);
     }
-    .drive-top {
+    .drive-row {
       display: flex;
       justify-content: space-between;
-      font-size: 12.5px;
+      align-items: center;
+      font-size: 13px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      margin-bottom: 7px;
+      margin-bottom: 8px;
     }
-    .bar-bg {
+    .progress-track {
       width: 100%;
       height: 12px;
-      background: #0f172a;
+      background: #1e293b;
       border-radius: 99px;
       overflow: hidden;
-      border: 1px solid #334155;
     }
-    #drive-fill {
+    #drive-progress {
       width: 0%;
       height: 100%;
-      background: linear-gradient(90deg, #38bdf8, #22c55e);
+      background: linear-gradient(90deg, #3b82f6, #10b981);
       transition: width 0.1s linear;
     }
-    #drive-radio {
+    #drive-banter {
       margin-top: 8px;
       font-size: 13.5px;
       color: #fde047;
       font-weight: 600;
     }
 
-    /* TEKKEN 8 FIGHT HUD */
+    /* ================= TEKKEN 8 FIGHT HUD ================= */
     #fight-hud {
       position: absolute;
       top: 14px;
       left: 50%;
       transform: translateX(-50%);
-      width: min(96%, 1040px);
+      width: min(96%, 1020px);
       z-index: 25;
       display: none;
       pointer-events: none;
     }
-    .tk-grid {
+    .hud-grid {
       display: grid;
-      grid-template-columns: 1fr 74px 1fr;
+      grid-template-columns: 1fr 76px 1fr;
       gap: 14px;
       align-items: center;
     }
-    .tk-col {
+    .fighter-bar-wrap {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 6px;
     }
-    .tk-meta {
+    .fighter-meta {
       display: flex;
       justify-content: space-between;
       font-size: 14px;
@@ -275,67 +259,67 @@
       text-transform: uppercase;
       text-shadow: 0 2px 6px #000;
     }
-    .tk-hp-box {
+    .hp-shell {
       height: 26px;
       background: rgba(15, 23, 42, 0.92);
-      border: 2px solid #f1f5f9;
+      border: 2px solid #e2e8f0;
       transform: skewX(-16deg);
       position: relative;
       overflow: hidden;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.75);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
     }
-    .tk-hp-trail {
+    .hp-white {
       position: absolute;
       inset: 0;
       width: 100%;
       background: #dc2626;
       transition: width 0.55s ease;
     }
-    .tk-hp-bar {
+    .hp-main {
       position: absolute;
       inset: 0;
       width: 100%;
-      background: linear-gradient(90deg, #facc15, #22c55e);
+      background: linear-gradient(90deg, #facc15, #16a34a);
       transition: width 0.08s linear;
     }
-    .tk-hp-bar.enemy {
-      background: linear-gradient(90deg, #f43f5e, #be123c);
+    .hp-main.boss {
+      background: linear-gradient(90deg, #f43f5e, #9f1239);
     }
-    .tk-rage-box {
-      width: 72%;
+    .rage-shell {
+      width: 70%;
       height: 10px;
       background: #090d16;
       border: 1px solid #64748b;
       transform: skewX(-16deg);
       overflow: hidden;
     }
-    #p1-rage-fill {
+    #p1-rage-bar {
       width: 0%;
       height: 100%;
       background: linear-gradient(90deg, #38bdf8, #ef4444);
       transition: width 0.15s ease;
     }
-    .tk-timer {
-      height: 58px;
+    .timer-emblem {
+      height: 60px;
       background: radial-gradient(circle, #1e293b, #090d16);
       border: 2px solid #fbbf24;
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 27px;
+      font-size: 28px;
       font-weight: 900;
       color: #fef08a;
       box-shadow: 0 0 20px rgba(251, 191, 36, 0.35);
     }
 
-    /* ANNOUNCER & COMBO */
-    #announcer {
+    /* ================= ANNOUNCER & COMBO COUNTER ================= */
+    #center-announcer {
       position: absolute;
-      top: 37%;
+      top: 38%;
       left: 50%;
       transform: translate(-50%, -50%) scale(0.75);
-      font-size: clamp(28px, 5.2vw, 62px);
+      font-size: clamp(30px, 5.5vw, 64px);
       font-weight: 900;
       font-style: italic;
       text-transform: uppercase;
@@ -347,21 +331,21 @@
       transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       white-space: nowrap;
     }
-    #announcer.show {
+    #center-announcer.active {
       opacity: 1;
       transform: translate(-50%, -50%) scale(1);
     }
 
-    #combo-hud {
+    #combo-box {
       position: absolute;
-      top: 126px;
-      left: 26px;
+      top: 130px;
+      left: 28px;
       z-index: 26;
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.2s;
     }
-    #combo-count {
+    #combo-num {
       font-size: 46px;
       font-weight: 900;
       font-style: italic;
@@ -369,15 +353,15 @@
       text-shadow: 3px 3px 0 #be123c;
       line-height: 1;
     }
-    #combo-name {
+    #combo-move {
       font-size: 13px;
       font-weight: 800;
-      letter-spacing: 1.4px;
+      letter-spacing: 1.5px;
       color: #e2e8f0;
       text-transform: uppercase;
     }
 
-    /* CONTROLS BAR */
+    /* ================= ON-SCREEN CONTROLS ================= */
     #controls-bar {
       position: absolute;
       bottom: 14px;
@@ -389,161 +373,145 @@
       z-index: 28;
       pointer-events: none;
     }
-    .btn-row {
+    .pad-group {
       display: flex;
       gap: 7px;
       flex-wrap: wrap;
       pointer-events: auto;
     }
-    .ctrl-btn {
-      background: rgba(15, 23, 42, 0.9);
+    .game-btn {
+      background: rgba(15, 23, 42, 0.88);
       border: 1.5px solid rgba(255, 255, 255, 0.3);
       color: #fff;
-      padding: 11px 14px;
+      padding: 11px 15px;
       border-radius: 10px;
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 800;
       cursor: pointer;
       touch-action: manipulation;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.5);
     }
-    .ctrl-btn:active {
+    .game-btn:active {
       transform: scale(0.93);
+      background: #2563eb;
     }
-    .ctrl-btn.j { border-color: #60a5fa; background: rgba(30, 58, 138, 0.88); }
-    .ctrl-btn.k { border-color: #34d399; background: rgba(6, 78, 59, 0.88); }
-    .ctrl-btn.l { border-color: #fbbf24; background: rgba(120, 53, 15, 0.88); }
-    .ctrl-btn.u { border-color: #a78bfa; background: rgba(76, 29, 149, 0.88); }
-    .ctrl-btn.r {
+    .game-btn.strike-j { border-color: #60a5fa; background: rgba(30, 58, 138, 0.85); }
+    .game-btn.strike-k { border-color: #34d399; background: rgba(6, 78, 59, 0.85); }
+    .game-btn.strike-l { border-color: #fbbf24; background: rgba(120, 53, 15, 0.85); }
+    .game-btn.strike-u { border-color: #a78bfa; background: rgba(76, 29, 149, 0.85); }
+    .game-btn.strike-r {
       border-color: #fde047;
       background: linear-gradient(135deg, #dc2626, #991b1b);
-      animation: rageGlow 1.1s infinite;
+      animation: pulseGlow 1.1s infinite;
     }
-    @keyframes rageGlow {
+    @keyframes pulseGlow {
       0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
-      50% { box-shadow: 0 0 24px rgba(250, 204, 21, 0.95); }
+      50% { box-shadow: 0 0 24px rgba(250, 204, 21, 0.9); }
     }
   </style>
 </head>
 <body>
 
-  <div id="vignette"></div>
+  <!-- CINEMATIC BLACK BARS -->
   <div id="lb-top" class="letterbox"></div>
   <div id="lb-bottom" class="letterbox"></div>
 
-  <!-- TITLE SCREEN -->
+  <!-- TITLE SCREEN OVERLAY -->
   <div id="title-screen">
-    <div class="tag-pill">Director's Cut • 6-Chapter Karachi Noir & Tekken 8 Combat</div>
-    <div class="hero-title">KARACHI NIGHTS<br>ISHQ, DHOKHA & BADLA</div>
-    <div class="hero-desc">
-      Sumair ne apni 3 mahine ki agency kamai se Maryam ke liye Diamond Pendant khareeda aur apni <strong>2022 Corolla Altis Special Edition</strong> le kar raat ke 11:30 baje Bilal ke sath nikla. Lekin Tariq Road se le kar Do Darya Penthouse तक aaj raat ek aisi saazish khulne wali hai jo sab kuch badal degi.
+    <div class="game-badge">Karachi Noir • Story & Tekken 8 Combat Engine</div>
+    <div class="main-title">KARACHI NIGHTS<br>ISHQ, DHOKHA & BADLA</div>
+    <div class="sub-title">
+      Raat ke 12 baje, Sumair apni <strong>Corolla Altis Special Edition</strong> mein apne dost Bilal ke sath Maryam ko uske birthday par surprise dene nikla hai—bekhabar is baat se ke aaj raat Clifton se DHA Rooftop tak uske sath kya khel hone wala hai.
     </div>
-    <div class="chapter-grid">
-      <button class="chap-btn primary" onclick="launchChapter(1)">
-        ▶ Ch 1: Shahrah-e-Faisal Rush
-        <span>11:30 PM • High-Speed Altis 2022 Drive (W/S/A/D)</span>
-      </button>
-      <button class="chap-btn" onclick="launchChapter(2)">
-        🥊 Ch 2: Tariq Road Ambush
-        <span>12:00 AM • Fight #1 vs Sherry "Meter-Down"</span>
-      </button>
-      <button class="chap-btn" onclick="launchChapter(3)">
-        🌊 Ch 3: Clifton Sea View Setup
-        <span>12:30 AM • Fight #2 vs Raza (Bodyguard)</span>
-      </button>
-      <button class="chap-btn" onclick="launchChapter(4)">
-        🚔 Ch 4: Do Darya SUV Pursuit
-        <span>1:00 AM • Dodge Hamza's BlackVigo Squad</span>
-      </button>
-      <button class="chap-btn" onclick="launchChapter(5)">
-        💔 Ch 5: The Penthouse Betrayal
-        <span>1:30 AM • Full Cutscene + Fight #3 vs Daniyal</span>
-      </button>
-      <button class="chap-btn" onclick="launchChapter(6)">
-        ⚡ Ch 6: Final Boss (Hamza_DHA)
-        <span>2:00 AM • Storm Final Battle & 3 Endings</span>
-      </button>
+    <div class="menu-buttons">
+      <button class="menu-btn primary" onclick="startStoryChapter(1)">▶ Play Full Story Mode</button>
+      <button class="menu-btn" onclick="startStoryChapter(2)">🥊 Ch 2: Clifton Fight</button>
+      <button class="menu-btn" onclick="startStoryChapter(3)">💔 Ch 3: The Betrayal</button>
+      <button class="menu-btn" onclick="startStoryChapter(4)">⚡ Ch 4: Final Boss (Hamza)</button>
     </div>
   </div>
 
-  <!-- DRIVING HUD -->
+  <!-- CHAPTER 1: DRIVING HUD -->
   <div id="drive-hud">
-    <div class="drive-top">
-      <span id="drive-stage-name" style="color:#38bdf8;">🚘 Altis 2022 SE • Shahrah-e-Faisal</span>
-      <span id="drive-pct">0%</span>
+    <div class="drive-row">
+      <span style="color:#60a5fa;">🚘 Altis 1.6X Special Edition • Shahrah-e-Faisal</span>
+      <span id="drive-dist-txt">0% to Clifton</span>
     </div>
-    <div class="bar-bg">
-      <div id="drive-fill"></div>
+    <div class="progress-track">
+      <div id="drive-progress"></div>
     </div>
-    <div id="drive-radio">🧢 Bilal: "Bhai [W/S] se speed control kar aur [A/D] se steer kar!"</div>
+    <div id="drive-banter">🧢 Bilal: "Bhai aaram se chala! Aage rickshaw aur cars hain—[A / D] ya Arrow Keys se bacha!"</div>
   </div>
 
   <!-- TEKKEN 8 FIGHT HUD -->
   <div id="fight-hud">
-    <div class="tk-grid">
-      <div class="tk-col">
-        <div class="tk-meta">
-          <span style="color:#60a5fa;">SUMAIR (KARACHI KING)</span>
-          <span id="p1-hp-txt">100%</span>
+    <div class="hud-grid">
+      <!-- Sumair -->
+      <div class="fighter-bar-wrap">
+        <div class="fighter-meta">
+          <span style="color:#60a5fa;">SUMAIR</span>
+          <span id="p1-hp-label">100%</span>
         </div>
-        <div class="tk-hp-box">
-          <div id="p1-hp-trail" class="tk-hp-trail"></div>
-          <div id="p1-hp-bar" class="tk-hp-bar"></div>
+        <div class="hp-shell">
+          <div id="p1-hp-white" class="hp-white"></div>
+          <div id="p1-hp-bar" class="hp-main"></div>
         </div>
-        <div class="tk-rage-box">
-          <div id="p1-rage-fill"></div>
+        <div class="rage-shell">
+          <div id="p1-rage-bar"></div>
         </div>
       </div>
 
-      <div class="tk-timer" id="tk-timer">99</div>
+      <!-- Timer -->
+      <div class="timer-emblem" id="fight-timer">99</div>
 
-      <div class="tk-col" style="align-items:flex-end;">
-        <div class="tk-meta" style="width:100%;">
-          <span id="p2-hp-txt">100%</span>
-          <span id="p2-name-txt" style="color:#fb7185;">BOSS</span>
+      <!-- Opponent -->
+      <div class="fighter-bar-wrap" style="align-items:flex-end;">
+        <div class="fighter-meta" style="width:100%;">
+          <span id="p2-hp-label">100%</span>
+          <span id="p2-name-label" style="color:#fb7185;">RAZA (ENFORCER)</span>
         </div>
-        <div class="tk-hp-box" style="width:100%;">
-          <div id="p2-hp-trail" class="tk-hp-trail"></div>
-          <div id="p2-hp-bar" class="tk-hp-bar enemy"></div>
+        <div class="hp-shell" style="width:100%;">
+          <div id="p2-hp-white" class="hp-white"></div>
+          <div id="p2-hp-bar" class="hp-main boss"></div>
         </div>
-        <div class="tk-rage-box">
-          <div style="width:100%; height:100%; background:#e11d48;"></div>
+        <div class="rage-shell">
+          <div style="width:100%; height:100%; background:#f43f5e;"></div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- CENTER ANNOUNCER & COMBO -->
-  <div id="announcer">FIGHT!</div>
-  <div id="combo-hud">
-    <div id="combo-count">4 HITS</div>
-    <div id="combo-name">ELECTRIC WIND GOD FIST</div>
+  <div id="center-announcer">FIGHT!</div>
+  <div id="combo-box">
+    <div id="combo-num">3 HITS</div>
+    <div id="combo-move">MISHIMA FLASH COMBO</div>
   </div>
 
-  <!-- CUTSCENE DIALOGUE BOX -->
-  <div id="cutscene-box">
-    <div class="cs-header">
+  <!-- CINEMATIC CUTSCENE DIALOGUE BOX -->
+  <div id="cutscene-ui">
+    <div class="cs-top">
       <span id="cs-speaker">SUMAIR</span>
-      <span id="cs-meta">CHAPTER 1</span>
+      <span id="cs-chapter-tag">CHAPTER 1 • CLIFTON SEA VIEW</span>
     </div>
-    <div id="cs-body">...</div>
-    <div class="cs-actions" id="cs-actions"></div>
+    <div id="cs-text">...</div>
+    <div class="cs-footer" id="cs-buttons">
+      <button class="cs-btn next" onclick="advanceCutscene()">Continue ➔ (Space)</button>
+    </div>
   </div>
 
-  <!-- BOTTOM CONTROLS BAR -->
+  <!-- ON-SCREEN CONTROLS -->
   <div id="controls-bar">
-    <div class="btn-row">
-      <button class="ctrl-btn" id="btn-left">◀ Steer Left [A]</button>
-      <button class="ctrl-btn" id="btn-right">Steer Right ▶ [D]</button>
-      <button class="ctrl-btn" id="btn-up">Accelerator [W]</button>
-      <button class="ctrl-btn" id="btn-down">Brake/Rev [S]</button>
+    <div class="pad-group">
+      <button class="game-btn" id="btn-left">◀ Left / Block [A]</button>
+      <button class="game-btn" id="btn-right">Right ▶ [D]</button>
     </div>
-    <div class="btn-row" id="fight-buttons">
-      <button class="ctrl-btn j" onclick="playerStrike('jab')">🥊 [J] 3-Hit Combo</button>
-      <button class="ctrl-btn k" onclick="playerStrike('kick')">🦵 [K] Spinning Kick</button>
-      <button class="ctrl-btn l" onclick="playerStrike('dorya')">⚡ [L] DORYA Launcher</button>
-      <button class="ctrl-btn u" onclick="playerStrike('bilal')">🧢 [U] Bilal Tag-In</button>
-      <button class="ctrl-btn r" onclick="playerStrike('rage')">🔥 [R] RAGE ART</button>
+    <div class="pad-group" id="combat-buttons">
+      <button class="game-btn strike-j" onclick="triggerPlayerMove('jab')">🥊 [J] 3-Hit Combo</button>
+      <button class="game-btn strike-k" onclick="triggerPlayerMove('kick')">🦵 [K] Heavy Kick</button>
+      <button class="game-btn strike-l" onclick="triggerPlayerMove('launcher')">⚡ [L] DORYA Uppercut</button>
+      <button class="game-btn strike-u" onclick="triggerPlayerMove('bilal')">🧢 [U] Bilal Assist</button>
+      <button class="game-btn strike-r" onclick="triggerPlayerMove('rage')">🔥 [R] RAGE ART</button>
     </div>
   </div>
 
@@ -552,108 +520,72 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     // =========================================================================
-    // 1. SYNTHESIZED SOUND ENGINE (TEKKEN IMPACTS, THUNDER, TURBO)
+    // 1. WEB AUDIO SYNTHESIZER (CRUNCHY TEKKEN IMPACTS, ENGINE, THUNDER)
     // =========================================================================
     let audioCtx = null;
-    function playSound(type) {
+    function sfx(type) {
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const t = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
 
-        if (type === 'light') {
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(250, t);
-          osc.frequency.exponentialRampToValueAtTime(45, t + 0.09);
-          gain.gain.setValueAtTime(0.22, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
-          osc.start(t);
-          osc.stop(t + 0.09);
-        } else if (type === 'heavy') {
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(165, t);
-          osc.frequency.exponentialRampToValueAtTime(28, t + 0.22);
-          gain.gain.setValueAtTime(0.36, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
-          osc.start(t);
-          osc.stop(t + 0.22);
-        } else if (type === 'electric') {
+        if (type === 'hit_light' || type === 'hit_heavy') {
+          // Noise burst + sub-bass punch for authentic fighting game impact
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type === 'hit_heavy' ? 'sawtooth' : 'triangle';
+          osc.frequency.setValueAtTime(type === 'hit_heavy' ? 150 : 230, now);
+          osc.frequency.exponentialRampToValueAtTime(32, now + (type === 'hit_heavy' ? 0.22 : 0.1));
+          gain.gain.setValueAtTime(type === 'hit_heavy' ? 0.35 : 0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + (type === 'hit_heavy' ? 0.22 : 0.1));
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + (type === 'hit_heavy' ? 0.22 : 0.1));
+        } else if (type === 'block') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
           osc.type = 'square';
-          osc.frequency.setValueAtTime(580, t);
-          osc.frequency.exponentialRampToValueAtTime(85, t + 0.28);
-          gain.gain.setValueAtTime(0.3, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
-          osc.start(t);
-          osc.stop(t + 0.28);
+          osc.frequency.setValueAtTime(620, now);
+          osc.frequency.exponentialRampToValueAtTime(280, now + 0.07);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.07);
         } else if (type === 'thunder') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(90, t);
-          osc.frequency.exponentialRampToValueAtTime(20, t + 0.7);
-          gain.gain.setValueAtTime(0.35, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
-          osc.start(t);
-          osc.stop(t + 0.7);
-        } else if (type === 'ui') {
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(520, t);
-          osc.frequency.exponentialRampToValueAtTime(780, t + 0.06);
-          gain.gain.setValueAtTime(0.1, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
-          osc.start(t);
-          osc.stop(t + 0.06);
+          osc.frequency.setValueAtTime(95, now);
+          osc.frequency.exponentialRampToValueAtTime(24, now + 0.65);
+          gain.gain.setValueAtTime(0.32, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.65);
         }
       } catch (e) {}
     }
 
     // =========================================================================
-    // 2. HIGH-RES PROCEDURAL TEXTURES & BUMP MAPS
+    // 2. PROCEDURAL CANVAS TEXTURES (NO MORE UGLY FLAT COLOR BLOCKS!)
     // =========================================================================
-    function makeWetAsphaltTexture() {
-      const c = document.createElement('canvas');
-      c.width = 512;
-      c.height = 512;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = '#0c101a';
-      ctx.fillRect(0, 0, 512, 512);
-
-      for (let i = 0; i < 3500; i++) {
-        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(148,163,184,0.04)' : 'rgba(0,0,0,0.22)';
-        ctx.fillRect(Math.random() * 512, Math.random() * 512, 3, 6);
-      }
-      ctx.fillStyle = '#f59e0b';
-      ctx.fillRect(20, 0, 8, 512);
-      ctx.fillRect(484, 0, 8, 512);
-      ctx.fillStyle = '#cbd5e1';
-      for (let y = 0; y < 512; y += 64) {
-        ctx.fillRect(172, y, 6, 36);
-        ctx.fillRect(334, y, 6, 36);
-      }
-      const tex = new THREE.CanvasTexture(c);
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(1, 16);
-      return tex;
-    }
-
-    function makeSkyscraperTexture() {
+    function createBuildingTexture() {
       const c = document.createElement('canvas');
       c.width = 256;
       c.height = 512;
       const ctx = c.getContext('2d');
-      ctx.fillStyle = '#070b14';
+      ctx.fillStyle = '#090d18';
       ctx.fillRect(0, 0, 256, 512);
-      for (let y = 16; y < 496; y += 24) {
-        for (let x = 14; x < 236; x += 28) {
-          const r = Math.random();
-          if (r > 0.42) {
-            ctx.fillStyle = r > 0.86 ? '#38bdf8' : r > 0.72 ? '#fb7185' : '#fef08a';
-          } else {
-            ctx.fillStyle = '#0f172a';
-          }
-          ctx.fillRect(x, y, 18, 14);
+      for (let y = 20; y < 490; y += 28) {
+        for (let x = 18; x < 230; x += 32) {
+          const lit = Math.random() > 0.38;
+          ctx.fillStyle = lit
+            ? (Math.random() > 0.8 ? '#38bdf8' : '#fde047')
+            : '#111827';
+          ctx.fillRect(x, y, 18, 16);
         }
       }
       const tex = new THREE.CanvasTexture(c);
@@ -662,37 +594,63 @@
       return tex;
     }
 
-    function makeBillboardTexture(title, subtitle, borderHex) {
+    function createAsphaltTexture() {
       const c = document.createElement('canvas');
       c.width = 512;
-      c.height = 160;
+      c.height = 512;
       const ctx = c.getContext('2d');
-      ctx.fillStyle = '#090d18';
-      ctx.fillRect(0, 0, 512, 160);
+      ctx.fillStyle = '#111520';
+      ctx.fillRect(0, 0, 512, 512);
+      // Wet asphalt grain
+      for (let i = 0; i < 2500; i++) {
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.15)';
+        ctx.fillRect(Math.random() * 512, Math.random() * 512, 3, 3);
+      }
+      // Yellow side lines & white lane dashes
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(24, 0, 8, 512);
+      ctx.fillRect(480, 0, 8, 512);
+      ctx.fillStyle = '#e2e8f0';
+      for (let y = 0; y < 512; y += 64) {
+        ctx.fillRect(170, y, 6, 36);
+        ctx.fillRect(336, y, 6, 36);
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(1, 14);
+      return tex;
+    }
+
+    function createNeonSignTexture(text, bgHex, borderHex) {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 128;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = bgHex;
+      ctx.fillRect(0, 0, 512, 128);
       ctx.strokeStyle = borderHex;
       ctx.lineWidth = 8;
-      ctx.strokeRect(6, 6, 500, 148);
-      ctx.shadowColor = borderHex;
-      ctx.shadowBlur = 20;
+      ctx.strokeRect(8, 8, 496, 112);
       ctx.fillStyle = '#ffffff';
-      ctx.font = '900 38px Segoe UI, sans-serif';
+      ctx.font = '900 42px Segoe UI, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(title, 256, 72);
-      ctx.fillStyle = borderHex;
-      ctx.font = '700 20px Segoe UI, sans-serif';
-      ctx.fillText(subtitle, 256, 118);
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = borderHex;
+      ctx.shadowBlur = 18;
+      ctx.fillText(text, 256, 64);
       return new THREE.CanvasTexture(c);
     }
 
     // =========================================================================
-    // 3. THREE.JS SCENE WITH ACES FILMIC TONE MAPPING & WEATHER
+    // 3. THREE.JS SCENE, LIGHTING & RAIN SYSTEM
     // =========================================================================
     const canvas = document.getElementById('game-canvas');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x040710);
-    scene.fog = new THREE.FogExp2(0x040710, 0.011);
+    scene.background = new THREE.Color(0x050811);
+    scene.fog = new THREE.FogExp2(0x050811, 0.012);
 
-    const camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.5, 320);
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.5, 300);
     const renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
@@ -701,259 +659,189 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.25;
 
-    const hemiLight = new THREE.HemisphereLight(0x60a5fa, 0x090d16, 0.75);
-    scene.add(hemiLight);
+    const ambientLight = new THREE.HemisphereLight(0x93c5fd, 0x0f172a, 0.85);
+    scene.add(ambientLight);
 
-    const moonDirLight = new THREE.DirectionalLight(0xe0f2fe, 1.35);
-    moonDirLight.position.set(16, 38, 24);
-    moonDirLight.castShadow = true;
-    scene.add(moonDirLight);
+    const mainSpot = new THREE.DirectionalLight(0xffe4e6, 1.2);
+    mainSpot.position.set(15, 35, 22);
+    mainSpot.castShadow = true;
+    scene.add(mainSpot);
 
-    const arenaNeonLight = new THREE.PointLight(0xe11d48, 3.2, 28);
-    arenaNeonLight.position.set(0, 6, -5);
-    scene.add(arenaNeonLight);
+    const neonRimLight = new THREE.PointLight(0xe11d48, 2.5, 30);
+    neonRimLight.position.set(0, 6, -5);
+    scene.add(neonRimLight);
 
-    const cyanRimLight = new THREE.PointLight(0x38bdf8, 2.4, 24);
-    cyanRimLight.position.set(-6, 4, 3);
-    scene.add(cyanRimLight);
-
-    const roadTex = makeWetAsphaltTexture();
+    // Wet Karachi Highway & Arena Floor
+    const asphaltTex = createAsphaltTexture();
     const roadMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(24, 340),
+      new THREE.PlaneGeometry(22, 320),
       new THREE.MeshStandardMaterial({
-        map: roadTex,
-        roughness: 0.16,
-        metalness: 0.45
+        map: asphaltTex,
+        roughness: 0.22,
+        metalness: 0.35
       })
     );
     roadMesh.rotation.x = -Math.PI / 2;
     roadMesh.receiveShadow = true;
     scene.add(roadMesh);
 
-    const bldgTex = makeSkyscraperTexture();
-    for (let z = -150; z <= 90; z += 18) {
-      const hL = 18 + (Math.abs(z * 11) % 26);
-      const bL = new THREE.Mesh(
-        new THREE.BoxGeometry(11, hL, 13),
-        new THREE.MeshStandardMaterial({ map: bldgTex, roughness: 0.5 })
+    // Karachi Skyline Buildings along both sides
+    const bldgTex = createBuildingTexture();
+    for (let z = -140; z <= 80; z += 18) {
+      const h1 = 18 + (Math.abs(z * 7) % 22);
+      const b1 = new THREE.Mesh(
+        new THREE.BoxGeometry(10, h1, 12),
+        new THREE.MeshStandardMaterial({ map: bldgTex, roughness: 0.6 })
       );
-      bL.position.set(-18.5, hL / 2, z);
-      scene.add(bL);
+      b1.position.set(-18, h1 / 2, z);
+      scene.add(b1);
 
-      const hR = 16 + (Math.abs(z * 17) % 28);
-      const bR = new THREE.Mesh(
-        new THREE.BoxGeometry(11, hR, 13),
-        new THREE.MeshStandardMaterial({ map: bldgTex, roughness: 0.5 })
+      const h2 = 16 + (Math.abs(z * 13) % 24);
+      const b2 = new THREE.Mesh(
+        new THREE.BoxGeometry(10, h2, 12),
+        new THREE.MeshStandardMaterial({ map: bldgTex, roughness: 0.6 })
       );
-      bR.position.set(18.5, hR / 2, z);
-      scene.add(bR);
+      b2.position.set(18, h2 / 2, z);
+      scene.add(b2);
     }
 
-    const billboardMat = new THREE.MeshBasicMaterial({
-      map: makeBillboardTexture('SHAHRAH-E-FAISAL', 'KARACHI MIDNIGHT EXPRESS', '#38bdf8')
-    });
-    const billboardMesh = new THREE.Mesh(new THREE.BoxGeometry(13, 3.6, 0.4), billboardMat);
-    billboardMesh.position.set(0, 5.6, -9.8);
-    scene.add(billboardMesh);
+    // Neon Billboard Backdrop at Fight Arena (Z = -8.5)
+    const signMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(12, 3, 0.4),
+      new THREE.MeshBasicMaterial({ map: createNeonSignTexture('CLIFTON • KARACHI NIGHTS', '#0f172a', '#e11d48') })
+    );
+    signMesh.position.set(0, 5.2, -9.5);
+    scene.add(signMesh);
 
-    function setBillboard(title, sub, hex) {
-      billboardMat.map = makeBillboardTexture(title, sub, hex);
-      billboardMat.needsUpdate = true;
-      arenaNeonLight.color.set(hex);
-    }
-
+    // 3D Rain Particle System
     const rainGeo = new THREE.BufferGeometry();
-    const rainCount = 1100;
+    const rainCount = 900;
     const rainPos = new Float32Array(rainCount * 3);
     for (let i = 0; i < rainCount * 3; i += 3) {
-      rainPos[i] = (Math.random() - 0.5) * 48;
-      rainPos[i + 1] = Math.random() * 26;
-      rainPos[i + 2] = (Math.random() - 0.5) * 48;
+      rainPos[i] = (Math.random() - 0.5) * 45;
+      rainPos[i + 1] = Math.random() * 25;
+      rainPos[i + 2] = (Math.random() - 0.5) * 45;
     }
     rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
-    const rainSystem = new THREE.Points(
-      rainGeo,
-      new THREE.PointsMaterial({ color: 0x93c5fd, size: 0.13, transparent: true, opacity: 0.65 })
-    );
+    const rainMat = new THREE.PointsMaterial({ color: 0x93c5fd, size: 0.14, transparent: true, opacity: 0.65 });
+    const rainSystem = new THREE.Points(rainGeo, rainMat);
     scene.add(rainSystem);
 
-    const boltGroup = new THREE.Group();
-    for (let i = 0; i < 6; i++) {
-      const seg = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.08, 0.08, 4.5, 6),
-        new THREE.MeshBasicMaterial({ color: 0xe0f2fe })
-      );
-      seg.position.set((i % 2 === 0 ? 0.4 : -0.4), 22 - i * 3.8, -14);
-      boltGroup.add(seg);
-    }
-    boltGroup.visible = false;
-    scene.add(boltGroup);
-
-    function triggerLightningFlash() {
-      playSound('thunder');
-      boltGroup.visible = true;
-      boltGroup.position.x = (Math.random() - 0.5) * 14;
-      renderer.toneMappingExposure = 2.4;
-      setTimeout(() => {
-        boltGroup.visible = false;
-        renderer.toneMappingExposure = 1.25;
-      }, 180);
-    }
-
     // =========================================================================
-    // 4. COROLLA ALTIS 2022 SPECIAL EDITION MODEL
+    // 4. DETAILED 3D CARS (SUMAIR'S WHITE ALTIS 2022 SE & HAMZA'S BLACK GT)
     // =========================================================================
-    function buildSculptedCar({ bodyHex = 0xf8fafc, roofHex = 0x090d16, hasLightBeams = false }) {
+    function createDetailedCar({ bodyHex = 0xf8fafc, roofHex = 0x0f172a, isSports = false }) {
       const car = new THREE.Group();
-      const paintMat = new THREE.MeshStandardMaterial({ color: bodyHex, metalness: 0.7, roughness: 0.18 });
-      const glassMat = new THREE.MeshStandardMaterial({ color: roofHex, metalness: 0.85, roughness: 0.1 });
-      const grilleMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.5 });
 
-      const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.72, 4.9), paintMat);
-      chassis.position.y = 0.62;
-      chassis.castShadow = true;
-      car.add(chassis);
+      const bodyMat = new THREE.MeshStandardMaterial({ color: bodyHex, metalness: 0.6, roughness: 0.2 });
+      const darkMat = new THREE.MeshStandardMaterial({ color: roofHex, metalness: 0.4, roughness: 0.25 });
+      const glowHead = new THREE.MeshBasicMaterial({ color: 0xe0f2fe });
+      const glowTail = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
 
-      const grille = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.42, 0.12), grilleMat);
-      grille.position.set(0, 0.55, -2.42);
-      car.add(grille);
+      // Lower Chassis
+      const lower = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.72, 4.8), bodyMat);
+      lower.position.y = 0.62;
+      lower.castShadow = true;
+      car.add(lower);
 
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.98, 0.62, 2.55), glassMat);
-      cabin.position.set(0, 1.25, -0.1);
+      // Cabin / Black Special Edition Roof
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.62, 2.5), darkMat);
+      cabin.position.set(0, 1.25, -0.15);
       car.add(cabin);
 
-      const spoiler = new THREE.Mesh(new THREE.BoxGeometry(2.15, 0.09, 0.36), glassMat);
-      spoiler.position.set(0, 1.08, 2.28);
+      // Rear Spoiler (Altis X Special Edition / GT wing)
+      const spoiler = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.1, 0.35), darkMat);
+      spoiler.position.set(0, 1.05, 2.25);
       car.add(spoiler);
 
-      const hlMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe });
-      const hlL = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.16, 0.1), hlMat);
-      hlL.position.set(-0.78, 0.74, -2.43);
-      const hlR = hlL.clone();
-      hlR.position.x = 0.78;
-      car.add(hlL, hlR);
+      // LED Headlights & Taillights
+      const hlLeft = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.16, 0.1), glowHead);
+      hlLeft.position.set(-0.75, 0.7, -2.41);
+      const hlRight = hlLeft.clone();
+      hlRight.position.x = 0.75;
+      car.add(hlLeft, hlRight);
 
-      const tlMat = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
-      const tlBar = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.16, 0.1), tlMat);
-      tlBar.position.set(0, 0.78, 2.43);
-      car.add(tlBar);
+      const tlLeft = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.16, 0.1), glowTail);
+      tlLeft.position.set(-0.72, 0.75, 2.41);
+      const tlRight = tlLeft.clone();
+      tlRight.position.x = 0.72;
+      car.add(tlLeft, tlRight);
 
-      if (hasLightBeams) {
-        const coneGeo = new THREE.ConeGeometry(1.6, 9, 16, 1, true);
-        coneGeo.rotateX(Math.PI / 2);
-        const coneMat = new THREE.MeshBasicMaterial({
-          color: 0xe0f2fe,
-          transparent: true,
-          opacity: 0.11,
-          side: THREE.DoubleSide,
-          depthWrite: false
-        });
-        const beamL = new THREE.Mesh(coneGeo, coneMat);
-        beamL.position.set(-0.8, 0.6, -6.9);
-        const beamR = beamL.clone();
-        beamR.position.x = 0.8;
-        car.add(beamL, beamR);
-      }
-
-      const tireGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 18);
-      tireGeo.rotateZ(Math.PI / 2);
-      const tireMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.7 });
-      const rimGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.32, 12);
-      rimGeo.rotateZ(Math.PI / 2);
-      const rimMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.2 });
-
-      [[-1.18, -1.55], [1.18, -1.55], [-1.18, 1.55], [1.18, 1.55]].forEach(([wx, wz]) => {
-        const tire = new THREE.Mesh(tireGeo, tireMat);
-        tire.position.set(wx, 0.4, wz);
-        const rim = new THREE.Mesh(rimGeo, rimMat);
-        rim.position.set(wx, 0.4, wz);
-        car.add(tire, rim);
+      // 4 Alloy Wheels
+      const wheelGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.28, 16);
+      wheelGeo.rotateZ(Math.PI / 2);
+      const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.7 });
+      [[-1.15, -1.5], [1.15, -1.5], [-1.15, 1.5], [1.15, 1.5]].forEach(([wx, wz]) => {
+        const w = new THREE.Mesh(wheelGeo, wheelMat);
+        w.position.set(wx, 0.38, wz);
+        car.add(w);
       });
 
       return car;
     }
 
-    const sumairAltis = buildSculptedCar({ bodyHex: 0xf8fafc, roofHex: 0x090d16, hasLightBeams: true });
-    sumairAltis.position.set(0, 0, 4);
-    sumairAltis.rotation.y = 0;
+    // Sumair's Pearl White 2022 Corolla Altis Special Edition (Black Roof + Spoiler)
+    const sumairAltis = createDetailedCar({ bodyHex: 0xf8fafc, roofHex: 0x090d16 });
+    sumairAltis.position.set(-5.5, 0, -4.5);
+    sumairAltis.rotation.y = 0.35;
     scene.add(sumairAltis);
 
-    const hamzaGT = buildSculptedCar({ bodyHex: 0x111827, roofHex: 0xdc2626, hasLightBeams: true });
-    hamzaGT.position.set(5.8, 0, -4.5);
-    hamzaGT.rotation.y = -0.38;
-    hamzaGT.visible = false;
-    scene.add(hamzaGT);
+    // Hamza's Matte-Black & Crimson Sports Car
+    const hamzaCar = createDetailedCar({ bodyHex: 0x111827, roofHex: 0xdc2626, isSports: true });
+    hamzaCar.position.set(5.8, 0, -4.5);
+    hamzaCar.rotation.y = -0.35;
+    hamzaCar.visible = false;
+    scene.add(hamzaCar);
 
     // =========================================================================
-    // 5. DETAILED FIGHTERS BUILDER
+    // 5. SMOOTH KEYFRAME-INTERPOLATED 3D FIGHTERS (WITH KI AURA GLOW)
     // =========================================================================
-    function buildDetailedFighter({
-      jacketHex = 0x1e40af,
-      shirtHex = 0xf8fafc,
-      pantsHex = 0x090d16,
-      skinHex = 0xf5d0a9,
-      hairHex = 0x090d16,
-      auraHex = 0x38bdf8,
+    function createFighter({
+      jacketColor = 0x1d4ed8,
+      shirtColor = 0xf8fafc,
+      pantsColor = 0x0f172a,
+      skinColor = 0xf5d0a9,
+      hairColor = 0x090d16,
+      auraColor = 0x38bdf8,
       isFemale = false,
       scale = 1
     }) {
-      const root = new THREE.Group();
-      root.scale.setScalar(scale);
+      const group = new THREE.Group();
+      group.scale.setScalar(scale);
 
-      const skinMat = new THREE.MeshStandardMaterial({ color: skinHex, roughness: 0.42 });
-      const jacketMat = new THREE.MeshStandardMaterial({ color: jacketHex, roughness: 0.3, metalness: 0.25 });
-      const shirtMat = new THREE.MeshStandardMaterial({ color: shirtHex, roughness: 0.55 });
-      const pantsMat = new THREE.MeshStandardMaterial({ color: pantsHex, roughness: 0.6 });
-      const hairMat = new THREE.MeshStandardMaterial({ color: hairHex, roughness: 0.75 });
+      const skinMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.45 });
+      const jacketMat = new THREE.MeshStandardMaterial({ color: jacketColor, roughness: 0.35, metalness: 0.15 });
+      const shirtMat = new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.6 });
+      const pantsMat = new THREE.MeshStandardMaterial({ color: pantsColor, roughness: 0.65 });
+      const hairMat = new THREE.MeshStandardMaterial({ color: hairColor, roughness: 0.8 });
 
       const pelvis = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.38, 0.48), pantsMat);
       pelvis.position.y = 1.18;
-      root.add(pelvis);
+      group.add(pelvis);
 
-      const belt = new THREE.Mesh(
-        new THREE.BoxGeometry(0.9, 0.1, 0.5),
-        new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.8 })
-      );
-      belt.position.y = 0.16;
-      pelvis.add(belt);
-
-      const torso = new THREE.Mesh(new THREE.BoxGeometry(1.02, 1.16, 0.52), shirtMat);
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(1.02, 1.15, 0.52), shirtMat);
       torso.position.y = 0.76;
       pelvis.add(torso);
 
-      const jacket = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.12, 0.56), jacketMat);
+      const jacket = new THREE.Mesh(new THREE.BoxGeometry(1.08, 1.1, 0.56), jacketMat);
       torso.add(jacket);
 
-      const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.4, 0.24, 14, 1, true), jacketMat);
-      collar.position.y = 0.62;
-      torso.add(collar);
-
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.39, 22, 22), skinMat);
-      head.position.y = 0.94;
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.38, 20, 20), skinMat);
+      head.position.y = 0.92;
       torso.add(head);
 
-      const shades = new THREE.Mesh(
-        new THREE.BoxGeometry(0.68, 0.16, 0.12),
-        new THREE.MeshStandardMaterial({ color: 0x090d16, metalness: 0.9, roughness: 0.1 })
-      );
-      shades.position.set(0, 0.05, 0.35);
-      head.add(shades);
-
-      const hair = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.34, 0.84), hairMat);
+      const hair = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.32, 0.82), hairMat);
       hair.position.set(0, 0.28, -0.03);
       head.add(hair);
 
       if (isFemale) {
-        const longHair = new THREE.Mesh(new THREE.BoxGeometry(0.84, 0.98, 0.4), hairMat);
-        longHair.position.set(0, -0.26, -0.25);
+        const longHair = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.95, 0.38), hairMat);
+        longHair.position.set(0, -0.25, -0.24);
         head.add(longHair);
       }
 
-      function createLimb(x, y, upMat, lowMat, isLeg, withAura) {
+      function makeLimb(x, y, upMat, lowMat, isLeg, hasAura) {
         const j1 = new THREE.Group();
         j1.position.set(x, y, 0);
         const up = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.14, 0.58, 12), upMat);
@@ -967,37 +855,37 @@
         low.position.y = -0.28;
         j2.add(low);
 
-        let aura = null;
-        if (withAura) {
-          aura = new THREE.Mesh(
-            new THREE.OctahedronGeometry(0.26, 1),
-            new THREE.MeshBasicMaterial({ color: auraHex, wireframe: true, transparent: true, opacity: 0 })
+        let auraMesh = null;
+        if (hasAura) {
+          auraMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(0.24, 12, 12),
+            new THREE.MeshBasicMaterial({ color: auraColor, transparent: true, opacity: 0.0 })
           );
-          aura.position.y = -0.55;
-          j2.add(aura);
+          auraMesh.position.y = -0.55;
+          j2.add(auraMesh);
         }
 
         if (isLeg) {
           const shoe = new THREE.Mesh(
-            new THREE.BoxGeometry(0.32, 0.22, 0.56),
+            new THREE.BoxGeometry(0.32, 0.22, 0.55),
             new THREE.MeshStandardMaterial({ color: 0xf8fafc })
           );
           shoe.position.set(0, -0.58, 0.1);
           j2.add(shoe);
         }
-        return { j1, j2, aura };
+        return { j1, j2, auraMesh };
       }
 
-      const lArm = createLimb(-0.69, 0.42, jacketMat, skinMat, false, true);
-      const rArm = createLimb(0.69, 0.42, jacketMat, skinMat, false, true);
+      const lArm = makeLimb(-0.68, 0.42, jacketMat, skinMat, false, true);
+      const rArm = makeLimb(0.68, 0.42, jacketMat, skinMat, false, true);
       torso.add(lArm.j1, rArm.j1);
 
-      const lLeg = createLimb(-0.26, 0, pantsMat, pantsMat, true, false);
-      const rLeg = createLimb(0.26, 0, pantsMat, pantsMat, true, true);
+      const lLeg = makeLimb(-0.26, 0, pantsMat, pantsMat, true, false);
+      const rLeg = makeLimb(0.26, 0, pantsMat, pantsMat, true, true);
       pelvis.add(lLeg.j1, rLeg.j1);
 
-      root.userData = {
-        pelvis, torso, jacket, head,
+      group.userData = {
+        pelvis, torso, head,
         lArm, rArm, lLeg, rLeg,
         pose: 'idle',
         vy: 0,
@@ -1005,48 +893,99 @@
         maxHp: 100,
         blocking: false
       };
-      return root;
+      return group;
     }
 
-    function animateFighterPose(f, dt, elapsed) {
+    // Smooth Keyframe Pose System (Lerps joints at 18x speed for fluid Tekken animation!)
+    function updateFighterPose(f, dt, elapsed) {
       const u = f.userData;
-      const s = Math.min(1, dt * 18);
-      const lerp = (a, b) => a + (b - a) * s;
+      const lerpSpeed = Math.min(1, dt * 18);
+      const lerp = (cur, target) => cur + (target - cur) * lerpSpeed;
 
-      let t = {
-        ty: 0, tx: 0,
-        ls: 0, le: -0.2,
-        rs: 0, re: -0.2,
-        lh: 0, lk: 0,
-        rh: 0, rk: 0,
+      let targets = {
+        torsoY: 0, torsoX: 0,
+        lShX: 0, lElX: -0.2,
+        rShX: 0, rElX: -0.2,
+        lHipX: 0, lKnX: 0,
+        rHipX: 0, rKnX: 0,
         aura: 0
       };
 
       if (u.pose === 'guard') {
-        u.pelvis.position.y = 1.15 + Math.sin(elapsed * 7) * 0.05;
-        t = { ty: 0.35, tx: 0.12, ls: -0.95, le: -1.35, rs: -0.8, re: -1.45, lh: -0.28, lk: 0.35, rh: 0.28, rk: 0.25, aura: 0.2 };
-      } else if (u.pose === 'block') {
-        t = { ty: 0.1, tx: -0.12, ls: -1.35, le: -1.7, rs: -1.35, re: -1.7, lh: -0.35, lk: 0.45, rh: 0.35, rk: 0.45, aura: 0.55 };
-      } else if (u.pose === 'walk') {
-        const w = Math.sin(elapsed * 13);
-        t = {
-          ty: w * 0.15, tx: 0.08,
-          ls: -0.6 - w * 0.4, le: -1.1,
-          rs: -0.6 + w * 0.4, re: -1.1,
-          lh: w * 0.65, lk: Math.max(0, -w * 0.5),
-          rh: -w * 0.65, rk: Math.max(0, w * 0.5),
+        const bob = Math.sin(elapsed * 7) * 0.05;
+        u.pelvis.position.y = 1.15 + bob;
+        targets = {
+          torsoY: 0.35, torsoX: 0.12,
+          lShX: -0.95, lElX: -1.35,
+          rShX: -0.8, rElX: -1.45,
+          lHipX: -0.28, lKnX: 0.35,
+          rHipX: 0.28, rKnX: 0.25,
           aura: 0.15
         };
+      } else if (u.pose === 'block') {
+        targets = {
+          torsoY: 0.1, torsoX: -0.1,
+          lShX: -1.3, lElX: -1.7,
+          rShX: -1.3, rElX: -1.7,
+          lHipX: -0.35, lKnX: 0.45,
+          rHipX: 0.35, rKnX: 0.45,
+          aura: 0.5
+        };
+      } else if (u.pose === 'walk') {
+        const w = Math.sin(elapsed * 13);
+        targets = {
+          torsoY: w * 0.15, torsoX: 0.08,
+          lShX: -0.6 - w * 0.4, lElX: -1.1,
+          rShX: -0.6 + w * 0.4, rElX: -1.1,
+          lHipX: w * 0.65, lKnX: Math.max(0, -w * 0.5),
+          rHipX: -w * 0.65, rKnX: Math.max(0, w * 0.5),
+          aura: 0.1
+        };
       } else if (u.pose === 'jab1') {
-        t = { ty: 0.6, tx: 0.15, ls: -1.65, le: -0.05, rs: -0.6, re: -1.4, lh: -0.4, lk: 0.3, rh: 0.35, rk: 0.2, aura: 0.9 };
+        targets = {
+          torsoY: 0.55, torsoX: 0.15,
+          lShX: -1.6, lElX: -0.05,
+          rShX: -0.6, rElX: -1.4,
+          lHipX: -0.4, lKnX: 0.3,
+          rHipX: 0.35, rKnX: 0.2,
+          aura: 0.85
+        };
       } else if (u.pose === 'jab2') {
-        t = { ty: -0.68, tx: 0.18, ls: -0.5, le: -1.3, rs: -1.7, re: -0.05, lh: -0.45, lk: 0.35, rh: 0.4, rk: 0.25, aura: 0.95 };
+        targets = {
+          torsoY: -0.65, torsoX: 0.18,
+          lShX: -0.5, lElX: -1.3,
+          rShX: -1.65, rElX: -0.05,
+          lHipX: -0.45, lKnX: 0.35,
+          rHipX: 0.4, rKnX: 0.25,
+          aura: 0.9
+        };
       } else if (u.pose === 'kick') {
-        t = { ty: -0.45, tx: -0.35, ls: -0.8, le: -1.1, rs: 0.5, re: -0.6, lh: 0.15, lk: 0.1, rh: -1.7, rk: 0.05, aura: 1.0 };
-      } else if (u.pose === 'dorya') {
-        t = { ty: -0.8, tx: -0.28, ls: 0.3, le: -0.8, rs: -2.5, re: -0.15, lh: -0.5, lk: 0.5, rh: 0.45, rk: 0.2, aura: 1.0 };
+        targets = {
+          torsoY: -0.4, torsoX: -0.35,
+          lShX: -0.8, lElX: -1.1,
+          rShX: 0.5, rElX: -0.6,
+          lHipX: 0.15, lKnX: 0.1,
+          rHipX: -1.65, rKnX: 0.05,
+          aura: 0.95
+        };
+      } else if (u.pose === 'launcher') {
+        targets = {
+          torsoY: -0.75, torsoX: -0.25,
+          lShX: 0.3, lElX: -0.8,
+          rShX: -2.45, rElX: -0.2,
+          lHipX: -0.5, lKnX: 0.5,
+          rHipX: 0.45, rKnX: 0.2,
+          aura: 1.0
+        };
       } else if (u.pose === 'hitstun') {
-        t = { ty: 0, tx: -0.48, ls: 0.4, le: -0.3, rs: 0.4, re: -0.3, lh: 0.2, lk: 0.3, rh: -0.2, rk: 0.3, aura: 0 };
+        targets = {
+          torsoY: 0, torsoX: -0.45,
+          lShX: 0.4, lElX: -0.3,
+          rShX: 0.4, rElX: -0.3,
+          lHipX: 0.2, lKnX: 0.3,
+          rHipX: -0.2, rKnX: 0.3,
+          aura: 0
+        };
       } else if (u.pose === 'ko') {
         f.rotation.z = lerp(f.rotation.z, Math.PI / 2);
         u.pelvis.position.y = lerp(u.pelvis.position.y, 0.35);
@@ -1054,317 +993,449 @@
       }
 
       f.rotation.z = lerp(f.rotation.z, 0);
-      u.torso.rotation.y = lerp(u.torso.rotation.y, t.ty);
-      u.torso.rotation.x = lerp(u.torso.rotation.x, t.tx);
-      u.lArm.j1.rotation.x = lerp(u.lArm.j1.rotation.x, t.ls);
-      u.lArm.j2.rotation.x = lerp(u.lArm.j2.rotation.x, t.le);
-      u.rArm.j1.rotation.x = lerp(u.rArm.j1.rotation.x, t.rs);
-      u.rArm.j2.rotation.x = lerp(u.rArm.j2.rotation.x, t.re);
-      u.lLeg.j1.rotation.x = lerp(u.lLeg.j1.rotation.x, t.lh);
-      u.lLeg.j2.rotation.x = lerp(u.lLeg.j2.rotation.x, t.lk);
-      u.rLeg.j1.rotation.x = lerp(u.rLeg.j1.rotation.x, t.rh);
-      u.rLeg.j2.rotation.x = lerp(u.rLeg.j2.rotation.x, t.rk);
+      u.torso.rotation.y = lerp(u.torso.rotation.y, targets.torsoY);
+      u.torso.rotation.x = lerp(u.torso.rotation.x, targets.torsoX);
+      u.lArm.j1.rotation.x = lerp(u.lArm.j1.rotation.x, targets.lShX);
+      u.lArm.j2.rotation.x = lerp(u.lArm.j2.rotation.x, targets.lElX);
+      u.rArm.j1.rotation.x = lerp(u.rArm.j1.rotation.x, targets.rShX);
+      u.rArm.j2.rotation.x = lerp(u.rArm.j2.rotation.x, targets.rElX);
+      u.lLeg.j1.rotation.x = lerp(u.lLeg.j1.rotation.x, targets.lHipX);
+      u.lLeg.j2.rotation.x = lerp(u.lLeg.j2.rotation.x, targets.lKnX);
+      u.rLeg.j1.rotation.x = lerp(u.rLeg.j1.rotation.x, targets.rHipX);
+      u.rLeg.j2.rotation.x = lerp(u.rLeg.j2.rotation.x, targets.rKnX);
 
-      [u.lArm.aura, u.rArm.aura, u.rLeg.aura].forEach((a) => {
-        if (a) {
-          a.material.opacity = t.aura;
-          a.rotation.y += 8 * dt;
-        }
-      });
+      if (u.lArm.auraMesh) u.lArm.auraMesh.material.opacity = targets.aura;
+      if (u.rArm.auraMesh) u.rArm.auraMesh.material.opacity = targets.aura;
+      if (u.rLeg.auraMesh) u.rLeg.auraMesh.material.opacity = targets.aura;
     }
 
-    const sumair = buildDetailedFighter({ jacketHex: 0x1d4ed8, pantsHex: 0x090d16, auraHex: 0x38bdf8 });
+    // Spawn Characters
+    const sumair = createFighter({
+      jacketColor: 0x1e40af,
+      shirtColor: 0xf8fafc,
+      pantsColor: 0x090d16,
+      auraColor: 0x38bdf8
+    });
     sumair.position.set(-2.6, 0, 0);
     sumair.rotation.y = Math.PI / 2;
     scene.add(sumair);
 
-    const bilal = buildDetailedFighter({ jacketHex: 0x059669, shirtHex: 0xfef08a, pantsHex: 0x1e293b, auraHex: 0x34d399 });
-    bilal.position.set(-4.3, 0, -2.6);
-    bilal.rotation.y = 0.55;
+    const bilal = createFighter({
+      jacketColor: 0x047857,
+      shirtColor: 0xfef08a,
+      pantsColor: 0x1e293b,
+      auraColor: 0x34d399
+    });
+    bilal.position.set(-4.2, 0, -2.5);
+    bilal.rotation.y = 0.6;
     scene.add(bilal);
 
-    const maryam = buildDetailedFighter({ jacketHex: 0xdb2777, shirtHex: 0xfdf2f8, pantsHex: 0x4c0519, isFemale: true });
-    maryam.position.set(0, 0, -3.6);
+    const maryam = createFighter({
+      jacketColor: 0xbe185d,
+      shirtColor: 0xfdf2f8,
+      pantsColor: 0x4c0519,
+      isFemale: true
+    });
+    maryam.position.set(0, 0, -3.5);
     scene.add(maryam);
 
-    const bossFighter = buildDetailedFighter({ jacketHex: 0xb91c1c, shirtHex: 0x111827, pantsHex: 0x1f2937, auraHex: 0xf43f5e, scale: 1.08 });
-    bossFighter.position.set(2.6, 0, 0);
-    bossFighter.rotation.y = -Math.PI / 2;
-    scene.add(bossFighter);
+    const opponent = createFighter({
+      jacketColor: 0xb91c1c,
+      shirtColor: 0x111827,
+      pantsColor: 0x1f2937,
+      auraColor: 0xf43f5e,
+      scale: 1.08
+    });
+    opponent.position.set(2.6, 0, 0);
+    opponent.rotation.y = -Math.PI / 2;
+    scene.add(opponent);
 
     // =========================================================================
-    // 6. STORY CAMPAIGN & DRIVING PHYSICS ENGINE
+    // 6. STORY CHAPTERS, CUTSCENES & GAMEPLAY STATE MACHINE
     // =========================================================================
-    let gameState = 'TITLE';
-    let activeChapter = 1;
-    let csScript = [];
-    let csStep = 0;
-    let csDoneCallback = null;
-    let camGoalPos = new THREE.Vector3(0, 3.4, 9.5);
-    let camGoalLook = new THREE.Vector3(0, 1.5, 0);
+    let gameState = 'TITLE'; // 'TITLE', 'DRIVE', 'CUTSCENE', 'FIGHT'
+    let currentChapter = 1;
+    let cutsceneLines = [];
+    let cutsceneIdx = 0;
+    let onCutsceneFinish = null;
+    let camTargetPos = new THREE.Vector3(0, 3.5, 9.5);
+    let camLookAtPos = new THREE.Vector3(0, 1.6, 0);
 
-    const trafficPool = [];
-    for (let i = 0; i < 6; i++) {
-      const c = buildSculptedCar({
-        bodyHex: [0xd97706, 0x2563eb, 0x10b981, 0x7c3aed, 0xe11d48, 0x090d16][i],
+    // Highway Traffic Cars Pool (For Chapter 1)
+    const trafficCars = [];
+    for (let i = 0; i < 5; i++) {
+      const tc = createDetailedCar({
+        bodyHex: [0xd97706, 0x2563eb, 0x059669, 0x7c3aed, 0xe11d48][i],
         roofHex: 0x111827
       });
-      c.visible = false;
-      scene.add(c);
-      trafficPool.push({ mesh: c, laneX: 0, z: -35 - i * 24 });
+      tc.visible = false;
+      scene.add(tc);
+      trafficCars.push({ mesh: tc, laneX: 0, z: -40 - i * 28 });
     }
     let driveProgress = 0;
-    let carSpeedZ = 0; // Forward speed controlled by W/S
 
-    function announce(txt) {
-      const el = document.getElementById('announcer');
+    function showAnnouncerBanner(txt) {
+      const el = document.getElementById('center-announcer');
       el.textContent = txt;
-      el.classList.add('show');
-      setTimeout(() => el.classList.remove('show'), 1750);
+      el.classList.add('active');
+      setTimeout(() => el.classList.remove('active'), 1750);
     }
 
-    function startCutscene(lines, metaLabel, onComplete) {
+    function playCutscene(lines, chapterLabel, onDone) {
       gameState = 'CUTSCENE';
-      document.body.classList.add('cutscene-active');
+      document.body.classList.add('cutscene-mode');
       document.getElementById('drive-hud').style.display = 'none';
       document.getElementById('fight-hud').style.display = 'none';
       document.getElementById('controls-bar').style.display = 'none';
-      document.getElementById('cutscene-box').style.display = 'block';
-      document.getElementById('cs-meta').textContent = metaLabel;
+      document.getElementById('cutscene-ui').style.display = 'block';
+      document.getElementById('cs-chapter-tag').textContent = chapterLabel;
 
-      csScript = lines;
-      csStep = 0;
-      csDoneCallback = onComplete;
-      renderCutsceneLine();
+      cutsceneLines = lines;
+      cutsceneIdx = 0;
+      onCutsceneFinish = onDone;
+      renderCutsceneStep();
     }
 
-    function renderCutsceneLine() {
-      const line = csScript[csStep];
+    function renderCutsceneStep() {
+      const line = cutsceneLines[cutsceneIdx];
       document.getElementById('cs-speaker').textContent = line.speaker;
       document.getElementById('cs-speaker').style.color = line.color || '#fbbf24';
-      document.getElementById('cs-body').textContent = line.text;
+      document.getElementById('cs-text').textContent = line.text;
 
-      if (line.cam) camGoalPos.set(...line.cam);
-      if (line.look) camGoalLook.set(...line.look);
-      if (line.lightning) triggerLightningFlash();
+      if (line.camPos) camTargetPos.set(...line.camPos);
+      if (line.lookAt) camLookAtPos.set(...line.lookAt);
 
-      const actBox = document.getElementById('cs-actions');
-      actBox.innerHTML = '';
+      const footer = document.getElementById('cs-buttons');
+      footer.innerHTML = '';
 
       if (line.choices) {
         line.choices.forEach((ch) => {
           const b = document.createElement('button');
-          b.className = 'cs-btn cta';
+          b.className = 'cs-btn next';
           b.textContent = ch.label;
-          b.onclick = ch.fn;
-          actBox.appendChild(b);
+          b.onclick = ch.action;
+          footer.appendChild(b);
         });
       } else {
         const nextBtn = document.createElement('button');
-        nextBtn.className = 'cs-btn cta';
-        nextBtn.textContent = csStep < csScript.length - 1 ? 'Continue ➔ [Space]' : 'Start Action 🔥 [Space]';
-        nextBtn.onclick = nextCutsceneLine;
-        actBox.appendChild(nextBtn);
+        nextBtn.className = 'cs-btn next';
+        nextBtn.textContent = cutsceneIdx < cutsceneLines.length - 1 ? 'Next ➔ [Space]' : 'Start Action 🔥 [Space]';
+        nextBtn.onclick = advanceCutscene;
+        footer.appendChild(nextBtn);
       }
     }
 
-    function nextCutsceneLine() {
-      playSound('ui');
-      if (csStep < csScript.length - 1) {
-        csStep++;
-        renderCutsceneLine();
+    function advanceCutscene() {
+      sfx('block');
+      if (cutsceneIdx < cutsceneLines.length - 1) {
+        cutsceneIdx++;
+        renderCutsceneStep();
       } else {
-        document.body.classList.remove('cutscene-active');
-        document.getElementById('cutscene-box').style.display = 'none';
-        if (csDoneCallback) csDoneCallback();
+        document.body.classList.remove('cutscene-mode');
+        document.getElementById('cutscene-ui').style.display = 'none';
+        if (onCutsceneFinish) onCutsceneFinish();
       }
     }
 
-    function launchChapter(chap) {
-      activeChapter = chap;
+    function startStoryChapter(chap) {
+      currentChapter = chap;
       document.getElementById('title-screen').style.opacity = '0';
-      setTimeout(() => { document.getElementById('title-screen').style.display = 'none'; }, 400);
+      setTimeout(() => { document.getElementById('title-screen').style.display = 'none'; }, 450);
 
-      if (chap === 1 || chap === 4) {
-        setBillboard(chap === 1 ? 'SHAHRAH-E-FAISAL' : 'DO DARYA SEAFRONT', '11:30 PM • HIGHWAY DRIVE (W/S/A/D)', '#38bdf8');
-        sumair.visible = bilal.visible = maryam.visible = bossFighter.visible = hamzaGT.visible = false;
+      // CHAPTER 1: MIDNIGHT ALTIS DRIVE ON SHAHRAH-E-FAISAL
+      if (chap === 1) {
+        sumair.visible = false;
+        bilal.visible = false;
+        maryam.visible = false;
+        opponent.visible = false;
+        hamzaCar.visible = false;
+
         sumairAltis.visible = true;
         sumairAltis.position.set(0, 0, 4);
         sumairAltis.rotation.y = 0;
         driveProgress = 0;
-        carSpeedZ = 14;
 
-        trafficPool.forEach((tc, i) => {
+        trafficCars.forEach((tc, i) => {
           tc.mesh.visible = true;
-          tc.laneX = [-5.6, -1.9, 1.9, 5.6][i % 4];
-          tc.z = -35 - i * 25;
+          tc.laneX = [-5.5, -1.8, 1.8, 5.5][i % 4];
+          tc.z = -35 - i * 26;
           tc.mesh.position.set(tc.laneX, 0, tc.z);
         });
 
-        startCutscene([
+        playCutscene([
           {
             speaker: "🧢 BILAL (PASSENGER SEAT)",
             color: "#34d399",
-            text: "Sumair bhai, [W] daba ke speed badha aur [S] se brake maar! [A] aur [D] se lane change kar ke traffic dodge kar!",
-            cam: [4.2, 2.1, 8.4],
-            look: [0, 0.9, 3.5]
+            text: "Raat ke 12 baj gaye hain Sumair! Teri Altis Special Edition chamak toh bohot rahi hai, par Maryam pichle do din se tera phone kyun ignore kar rahi hai?",
+            camPos: [4.2, 2.2, 8.5],
+            lookAt: [0, 0.9, 3.5]
+          },
+          {
+            speaker: "😎 SUMAIR",
+            color: "#60a5fa",
+            text: "Yaar Bilal, uska birthday hai aaj. Busy hogi family ke sath. Maine pichli seat pe uska gift aur bouquet rakha hai—bas 2 minute mein Clifton Sea View pahunchte hain!",
+            camPos: [-3.8, 1.9, 7.8],
+            lookAt: [0, 0.9, 3.5]
           }
-        ], chap === 1 ? "CHAPTER 1 • SHAHRAH-E-FAISAL RUSH" : "CHAPTER 4 • DO DARYA PURSUIT", () => {
+        ], "CHAPTER 1 • SHAHRAH-E-FAISAL MIDNIGHT DRIVE", () => {
           gameState = 'DRIVE';
-          document.getElementById('drive-stage-name').textContent = chap === 1 ? '🚘 Altis 2022 • Shahrah-e-Faisal' : '🚔 Coastal Chase • Avoid Traffic!';
           document.getElementById('drive-hud').style.display = 'block';
           document.getElementById('controls-bar').style.display = 'flex';
-          document.getElementById('fight-buttons').style.display = 'none';
-          announce("DRIVE! USE W / S / A / D");
+          document.getElementById('combat-buttons').style.display = 'none';
+          showAnnouncerBanner("REACH CLIFTON SEA VIEW!");
         });
-      } else if (chap === 2 || chap === 3 || chap === 5 || chap === 6) {
-        trafficPool.forEach((tc) => { tc.mesh.visible = false; });
-        sumairAltis.position.set(-5.8, 0, -4.4);
+      }
 
-        if (chap === 2) {
-          sumair.visible = bilal.visible = bossFighter.visible = true;
-          maryam.visible = false;
-          bossFighter.userData.jacket.material.color.setHex(0xd97706);
-          startCutscene([{ speaker: "🥊 SHERRY", color: "#f59e0b", text: "Oye chikne! Tariq Road pe rukh!", cam: [3, 2, 4], look: [2, 1.6, 0] }], "CHAPTER 2 • TARIQ ROAD AMBUSH", () => {
-            beginTekkenBattle("SHERRY 'METER-DOWN'", 140, () => launchChapter(3));
+      // CHAPTER 2: CLIFTON AMBUSH (SUMAIR VS RAZA)
+      else if (chap === 2) {
+        trafficCars.forEach((tc) => { tc.mesh.visible = false; });
+        sumairAltis.position.set(-5.8, 0, -4.2);
+        sumairAltis.rotation.y = 0.4;
+        hamzaCar.visible = false;
+
+        sumair.visible = true;
+        bilal.visible = true;
+        maryam.visible = true;
+        opponent.visible = true;
+
+        sumair.position.set(-2.8, 0, 0);
+        sumair.userData.pose = 'idle';
+        opponent.position.set(2.8, 0, 0);
+        opponent.userData.pose = 'idle';
+        opponent.rotation.z = 0;
+
+        playCutscene([
+          {
+            speaker: "😎 SUMAIR",
+            color: "#60a5fa",
+            text: "Happy Birthday Maryam! Dekho main time pe Clifton pahunch gaya... ye tumhare liye.",
+            camPos: [-1.5, 2.1, 4.5],
+            lookAt: [0, 1.6, -2.5]
+          },
+          {
+            speaker: "💅 MARYAM",
+            color: "#f472b6",
+            text: "Uff Sumair, itni raat ko yahan road pe kyun rok li gaadi? Chalo jaldi DHA Rooftop Lounge aao, mere dost wahan wait kar rahe hain.",
+            camPos: [1.2, 2.1, 3.8],
+            lookAt: [0, 1.7, -3.5]
+          },
+          {
+            speaker: "🥊 RAZA (STREET ENFORCER)",
+            color: "#f43f5e",
+            text: "Oye hero! Kiski ijazat se VIP lane mein apni Altis khadi ki hai? Chal chabi nikal warna isi road pe teri haddiyan tod dunga!",
+            camPos: [3.5, 2.0, 4.2],
+            lookAt: [2.5, 1.6, 0]
+          },
+          {
+            speaker: "🧢 BILAL",
+            color: "#34d399",
+            text: "Sumair! Piche mat hatna bhai—is gunde ko dikha de Karachi ke ladke kaise ladte hain! Main tere sath hoon!",
+            camPos: [-3.5, 2.0, 4.5],
+            lookAt: [-2.5, 1.6, 0]
+          }
+        ], "CHAPTER 2 • CLIFTON SEA VIEW AMBUSH", () => {
+          startTekkenMatch("RAZA (CLIFTON ENFORCER)", 140, () => {
+            startStoryChapter(3);
           });
-        } else if (chap === 3) {
-          sumair.visible = bilal.visible = maryam.visible = bossFighter.visible = true;
-          maryam.position.set(0.8, 0, -3.2);
-          bossFighter.userData.jacket.material.color.setHex(0x475569);
-          startCutscene([{ speaker: "🛡️ RAZA", color: "#94a3b8", text: "Hamza Sahab ka hukum hai ke yahan se guzro mat!", cam: [3, 2, 4], look: [2, 1.7, 0] }], "CHAPTER 3 • CLIFTON SEA VIEW", () => {
-            beginTekkenBattle("RAZA (CHIEF BOUNCER)", 175, () => launchChapter(4));
-          });
-        } else if (chap === 5) {
-          hamzaGT.visible = true;
-          sumair.visible = bilal.visible = maryam.visible = bossFighter.visible = true;
-          maryam.position.set(1.2, 0, -3.2);
-          bossFighter.userData.jacket.material.color.setHex(0x7c3aed);
-          startCutscene([{ speaker: "🥊 DANIYAL", color: "#a855f7", text: "Main DHA Fight Club ka champion hoon!", cam: [3, 2, 4], look: [2, 1.7, 0] }], "CHAPTER 5 • PENTHOUSE BETRAYAL", () => {
-            beginTekkenBattle("DANIYAL (MMA CHAMPION)", 200, () => launchChapter(6));
-          });
-        } else if (chap === 6) {
-          hamzaGT.visible = true;
-          sumair.visible = bilal.visible = maryam.visible = bossFighter.visible = true;
-          maryam.position.set(0, 0, -4.0);
-          bossFighter.userData.jacket.material.color.setHex(0xdc2626);
-          startCutscene([{ speaker: "🏎️ HAMZA", color: "#ef4444", text: "Aaj tujhe zameen chatwaunga!", cam: [3, 2, 4], look: [2, 1.7, 0] }], "FINAL CHAPTER • STORM SHOWDOWN", () => {
-            beginTekkenBattle("HAMZA_DHA (FINAL BOSS)", 260, () => triggerThreeEndings());
-          });
-        }
+        });
+      }
+
+      // CHAPTER 3: THE ROOFTOP BETRAYAL CUTSCENE
+      else if (chap === 3) {
+        trafficCars.forEach((tc) => { tc.mesh.visible = false; });
+        sumairAltis.position.set(-6.2, 0, -4.5);
+        hamzaCar.visible = true;
+        hamzaCar.position.set(5.8, 0, -4.2);
+
+        sumair.visible = true;
+        bilal.visible = true;
+        maryam.visible = true;
+        opponent.visible = true;
+
+        sumair.position.set(-2.4, 0, 0);
+        maryam.position.set(1.4, 0, -2.2);
+        opponent.position.set(2.8, 0, -0.5);
+        opponent.rotation.z = 0;
+
+        sfx('thunder');
+
+        playCutscene([
+          {
+            speaker: "😎 SUMAIR",
+            color: "#60a5fa",
+            text: "Maryam... main un gundon se bhir ke yahan DHA Rooftop tak tumhare liye aaya hoon. Ye Black Sports Car kiski hai? Aur ye ladka kaun hai?",
+            camPos: [-2.2, 2.0, 4.2],
+            lookAt: [1.5, 1.6, -1.5]
+          },
+          {
+            speaker: "🏎️ HAMZA (DHA PHASE 8)",
+            color: "#ef4444",
+            text: "Hahaha! Maryam, yehi hai wo 'Sumair' jiske baare mein tum bata rahi thi? Jo tumhare ek message pe poore Karachi ke chakkar kaat leta hai?",
+            camPos: [3.2, 2.0, 3.8],
+            lookAt: [2.4, 1.7, -0.5]
+          },
+          {
+            speaker: "💅 MARYAM (THE BETRAYAL)",
+            color: "#f472b6",
+            text: "Dekho Sumair, bura mat manna... par aaj meri aur Hamza ki official engagement party hai. Tum bohot sweet ho, par sachi baat ye hai ke mera aur tumhara status match nahi karta. Thanks for the gifts, dost.",
+            camPos: [0.8, 1.9, 2.8],
+            lookAt: [1.4, 1.7, -2.2]
+          },
+          {
+            speaker: "😎 SUMAIR",
+            color: "#60a5fa",
+            text: "Dost...? Maine apna waqt, apni izzat, sab kuch tumhare ek jhoot pe luta diya... aur tumne mujhe sirf tamasha banane ke liye yahan bulaya?!",
+            camPos: [-1.8, 1.85, 2.6],
+            lookAt: [-2.4, 1.7, 0]
+          },
+          {
+            speaker: "🏎️ HAMZA",
+            color: "#ef4444",
+            text: "Chal ab rona band kar aur apni gaadi le ke nikal yahan se, warna security bula ke bahar phikwaunga!",
+            camPos: [2.8, 2.0, 3.6],
+            lookAt: [2.8, 1.6, -0.5]
+          },
+          {
+            speaker: "🧢 BILAL",
+            color: "#34d399",
+            text: "Bas bohot ho gaya! Sumair, aaj is ameerzade ka sara gharoor iski apni gaadi ke bonut pe tod de! Uth mere bhai!",
+            camPos: [-3.2, 2.1, 4.4],
+            lookAt: [0, 1.6, 0]
+          }
+        ], "CHAPTER 3 • THE ROOFTOP BETRAYAL", () => {
+          startStoryChapter(4);
+        });
+      }
+
+      // CHAPTER 4: FINAL BOSS FIGHT IN THE POURING RAIN VS HAMZA
+      else if (chap === 4) {
+        hamzaCar.visible = true;
+        sumair.visible = true;
+        bilal.visible = true;
+        maryam.visible = true;
+        opponent.visible = true;
+        maryam.position.set(0, 0, -4.2);
+
+        sfx('thunder');
+        startTekkenMatch("HAMZA (FINAL BOSS)", 220, () => {
+          triggerFinalEndingCutscene();
+        });
       }
     }
 
     // =========================================================================
-    // 7. TEKKEN 8 2.5D COMBAT ENGINE
+    // 7. AUTHENTIC TEKKEN 8 2.5D COMBAT ENGINE (HIT-STOP, GUARD, LAUNCHER, RAGE)
     // =========================================================================
-    let p1Rage = 40;
-    let comboHits = 0;
-    let comboTimer = 0;
-    let hitStop = 0;
-    let camShake = 0;
-    let jabStep = 0;
-    let aiCooldown = 1.1;
-    let victoryCallback = null;
-    let rageArtActive = false;
+    let p1Rage = 35;
+    let comboCount = 0;
+    let comboDecay = 0;
+    let hitStopTimer = 0;
+    let cameraShake = 0;
+    letjabChain = 0;
+    let aiActionTimer = 1.2;
+    let onMatchVictory = null;
+    let rageArtCinematic = false;
 
-    const sparks = [];
+    const sparkParticles = [];
     const sparkGeo = new THREE.OctahedronGeometry(0.32, 0);
 
-    function emitHitSparks(x, y, z, hex, count = 10) {
+    function spawnHitSparks(x, y, z, hexColor, count = 8) {
       for (let i = 0; i < count; i++) {
-        const m = new THREE.Mesh(sparkGeo, new THREE.MeshBasicMaterial({ color: hex }));
+        const m = new THREE.Mesh(sparkGeo, new THREE.MeshBasicMaterial({ color: hexColor }));
         m.position.set(x, y, z);
         scene.add(m);
-        sparks.push({
+        sparkParticles.push({
           mesh: m,
-          vx: (Math.random() - 0.5) * 13,
-          vy: 2 + Math.random() * 9,
-          vz: (Math.random() - 0.5) * 9,
+          vx: (Math.random() - 0.5) * 12,
+          vy: 2 + Math.random() * 8,
+          vz: (Math.random() - 0.5) * 8,
           life: 0.28
         });
       }
     }
 
-    function beginTekkenBattle(enemyTitle, maxHp, onVictory) {
+    function startTekkenMatch(enemyName, enemyMaxHp, onWinCallback) {
       gameState = 'FIGHT';
-      victoryCallback = onVictory;
+      onMatchVictory = onWinCallback;
 
       sumair.position.set(-2.6, 0, 0);
       sumair.rotation.y = Math.PI / 2;
       sumair.userData.hp = 100;
       sumair.userData.maxHp = 100;
       sumair.userData.pose = 'guard';
+      sumair.userData.vy = 0;
 
-      bossFighter.position.set(2.6, 0, 0);
-      bossFighter.rotation.y = -Math.PI / 2;
-      bossFighter.rotation.z = 0;
-      bossFighter.userData.hp = maxHp;
-      bossFighter.userData.maxHp = maxHp;
-      bossFighter.userData.pose = 'guard';
-      bossFighter.userData.vy = 0;
+      opponent.position.set(2.6, 0, 0);
+      opponent.rotation.y = -Math.PI / 2;
+      opponent.rotation.z = 0;
+      opponent.userData.hp = enemyMaxHp;
+      opponent.userData.maxHp = enemyMaxHp;
+      opponent.userData.pose = 'guard';
+      opponent.userData.vy = 0;
 
-      p1Rage = 45;
-      comboHits = 0;
+      p1Rage = 40;
+      comboCount = 0;
 
-      document.getElementById('p2-name-txt').textContent = enemyTitle;
+      document.getElementById('p2-name-label').textContent = enemyName;
       document.getElementById('fight-hud').style.display = 'block';
       document.getElementById('controls-bar').style.display = 'flex';
-      document.getElementById('fight-buttons').style.display = 'flex';
-      syncFightHUD();
+      document.getElementById('combat-buttons').style.display = 'flex';
+      refreshFightHUD();
 
-      announce("GET READY FOR THE NEXT BATTLE!");
-      setTimeout(() => announce("ROUND 1 • FIGHT!"), 1350);
+      showAnnouncerBanner("GET READY FOR THE NEXT BATTLE!");
+      setTimeout(() => showAnnouncerBanner("ROUND 1 • FIGHT!"), 1400);
     }
 
-    function syncFightHUD() {
-      const p1 = Math.max(0, Math.round(sumair.userData.hp));
-      document.getElementById('p1-hp-txt').textContent = p1 + '%';
-      document.getElementById('p1-hp-bar').style.width = p1 + '%';
-      document.getElementById('p1-hp-trail').style.width = p1 + '%';
-      document.getElementById('p1-rage-fill').style.width = Math.min(100, p1Rage) + '%';
+    function refreshFightHUD() {
+      const p1Pct = Math.max(0, Math.round(sumair.userData.hp));
+      document.getElementById('p1-hp-label').textContent = p1Pct + '%';
+      document.getElementById('p1-hp-bar').style.width = p1Pct + '%';
+      document.getElementById('p1-hp-white').style.width = p1Pct + '%';
+      document.getElementById('p1-rage-bar').style.width = Math.min(100, p1Rage) + '%';
 
-      const p2 = Math.max(0, Math.round((bossFighter.userData.hp / bossFighter.userData.maxHp) * 100));
-      document.getElementById('p2-hp-txt').textContent = p2 + '%';
-      document.getElementById('p2-hp-bar').style.width = p2 + '%';
-      document.getElementById('p2-hp-trail').style.width = p2 + '%';
+      const p2Pct = Math.max(0, Math.round((opponent.userData.hp / opponent.userData.maxHp) * 100));
+      document.getElementById('p2-hp-label').textContent = p2Pct + '%';
+      document.getElementById('p2-hp-bar').style.width = p2Pct + '%';
+      document.getElementById('p2-hp-white').style.width = p2Pct + '%';
     }
 
-    function playerStrike(type) {
-      if (gameState !== 'FIGHT' || rageArtActive || bossFighter.userData.hp <= 0) return;
+    function triggerPlayerMove(move) {
+      if (gameState !== 'FIGHT' || rageArtCinematic || opponent.userData.hp <= 0) return;
 
       const u = sumair.userData;
-      const dist = Math.abs(bossFighter.position.x - sumair.position.x);
-      if (dist > 1.35 && dist < 4.6) {
-        sumair.position.x += Math.sign(bossFighter.position.x - sumair.position.x) * 0.7;
+      const dist = Math.abs(opponent.position.x - sumair.position.x);
+
+      // Step-in forward momentum on attack
+      if (dist > 1.35 && dist < 4.5) {
+        sumair.position.x += Math.sign(opponent.position.x - sumair.position.x) * 0.65;
       }
 
-      if (type === 'jab') {
-        jabStep = (jabStep + 1) % 2;
-        u.pose = jabStep === 0 ? 'jab1' : 'jab2';
-        playSound('light');
-        hitOpponent({ dmg: 12, vy: 0, push: 0.45, title: 'MISHIMA FLASH STRING', color: 0x38bdf8, heavy: false });
-      } else if (type === 'kick') {
+      if (move === 'jab') {
+        jabChain = (jabChain + 1) % 2;
+        u.pose = jabChain === 0 ? 'jab1' : 'jab2';
+        sfx('hit_light');
+        applyStrikeToOpponent({ dmg: 11, launchVy: 0, pushX: 0.45, label: 'MISHIMA FLASH JAB', spark: 0x38bdf8, heavy: false });
+      } else if (move === 'kick') {
         u.pose = 'kick';
-        playSound('heavy');
-        hitOpponent({ dmg: 22, vy: 4.8, push: 0.95, title: 'TORNADO GUARD CRUSH', color: 0x34d399, heavy: true });
-      } else if (type === 'dorya') {
-        u.pose = 'dorya';
-        playSound('electric');
-        hitOpponent({ dmg: 26, vy: 12.8, push: 0.65, title: '⚡ DORYA! ELECTRIC WIND GOD FIST', color: 0xfacc15, heavy: true });
-      } else if (type === 'bilal') {
-        playSound('heavy');
+        sfx('hit_heavy');
+        applyStrikeToOpponent({ dmg: 20, launchVy: 4.5, pushX: 0.95, label: 'TORNADO GUARD-BREAKER', spark: 0x34d399, heavy: true });
+      } else if (move === 'launcher') {
+        u.pose = 'launcher';
+        sfx('hit_heavy');
+        applyStrikeToOpponent({ dmg: 24, launchVy: 12.5, pushX: 0.6, label: '⚡ DORYA! ELECTRIC LAUNCHER', spark: 0xfacc15, heavy: true });
+      } else if (move === 'bilal') {
+        sfx('hit_heavy');
         u.hp = Math.min(100, u.hp + 25);
         p1Rage = Math.min(100, p1Rage + 25);
-        bilal.position.set(bossFighter.position.x - 0.9, 1.3, 0);
-        setTimeout(() => { bilal.position.set(-4.3, 0, -2.6); }, 450);
-        hitOpponent({ dmg: 24, vy: 9.0, push: 1.1, title: '🧢 BILAL FLYING ASSIST + CHAI HEAL', color: 0x22c55e, heavy: true });
-      } else if (type === 'rage') {
+        bilal.position.set(opponent.position.x - 0.9, 1.2, 0);
+        setTimeout(() => { bilal.position.set(-4.2, 0, -2.5); }, 450);
+        applyStrikeToOpponent({ dmg: 22, launchVy: 8.5, pushX: 1.1, label: '🧢 BILAL TAG-IN KICK + HEAL', spark: 0x22c55e, heavy: true });
+      } else if (move === 'rage') {
         if (p1Rage < 50) {
-          announce("NEED 50% RAGE!");
+          showAnnouncerBanner("NEED 50% RAGE!");
           return;
         }
-        performRageArtCutscene();
+        executeCinematicRageArt();
         return;
       }
 
@@ -1373,195 +1444,207 @@
       }, 240);
     }
 
-    function hitOpponent({ dmg, vy, push, title, color, heavy }) {
-      const dist = Math.abs(bossFighter.position.x - sumair.position.x);
-      if (dist > 2.8) return;
+    function applyStrikeToOpponent({ dmg, launchVy, pushX, label, spark, heavy }) {
+      const dist = Math.abs(opponent.position.x - sumair.position.x);
+      if (dist > 2.75) return;
 
-      const bu = bossFighter.userData;
-      const inAir = bossFighter.position.y > 0.25;
-      const finalDmg = inAir ? Math.round(dmg * 1.35) : dmg;
+      const oppU = opponent.userData;
+      const isAirborne = opponent.position.y > 0.25;
+      const actualDmg = isAirborne ? Math.round(dmg * 1.3) : dmg;
 
-      bu.hp = Math.max(0, bu.hp - finalDmg);
+      oppU.hp = Math.max(0, oppU.hp - actualDmg);
       p1Rage = Math.min(100, p1Rage + 16);
 
-      hitStop = heavy ? 0.065 : 0.03;
-      camShake = heavy ? 0.36 : 0.16;
+      // Authentic Tekken Hit-Stop Freeze & Camera Shake!
+      hitStopTimer = heavy ? 0.065 : 0.03;
+      cameraShake = heavy ? 0.35 : 0.15;
 
-      if (vy > 0) bu.vy = vy;
-      else if (inAir) bu.vy = Math.max(bu.vy, 5.4);
+      if (launchVy > 0) {
+        oppU.vy = launchVy;
+      } else if (isAirborne) {
+        oppU.vy = Math.max(oppU.vy, 5.2);
+      }
 
-      bossFighter.position.x = Math.min(7.5, bossFighter.position.x + push);
-      bu.pose = 'hitstun';
+      opponent.position.x = Math.min(7.5, opponent.position.x + pushX);
+      oppU.pose = 'hitstun';
       setTimeout(() => {
-        if (bu.hp > 0) bu.pose = 'guard';
+        if (oppU.hp > 0) oppU.pose = 'guard';
       }, 320);
 
-      emitHitSparks(bossFighter.position.x - 0.4, bossFighter.position.y + 1.7, 0, color, heavy ? 14 : 7);
+      spawnHitSparks(opponent.position.x - 0.4, opponent.position.y + 1.7, 0, spark, heavy ? 12 : 6);
 
-      comboHits++;
-      comboTimer = 2.3;
-      const ch = document.getElementById('combo-hud');
-      ch.style.opacity = '1';
-      document.getElementById('combo-count').textContent = `${comboHits} HIT${comboHits > 1 ? 'S' : ''}!`;
-      document.getElementById('combo-name').textContent = inAir ? `AIR JUGGLE • ${title}` : title;
+      comboCount++;
+      comboDecay = 2.2;
+      const cb = document.getElementById('combo-box');
+      cb.style.opacity = '1';
+      document.getElementById('combo-num').textContent = `${comboCount} HIT${comboCount > 1 ? 'S' : ''}!`;
+      document.getElementById('combo-move').textContent = isAirborne ? `AIR JUGGLE • ${label}` : label;
 
-      syncFightHUD();
+      refreshFightHUD();
 
-      if (bu.hp <= 0) handleFightKO();
+      if (oppU.hp <= 0) {
+        triggerKnockout();
+      }
     }
 
-    function performRageArtCutscene() {
-      rageArtActive = true;
+    // MULTI-ANGLE 3D CINEMATIC RAGE ART FINISHER!
+    function executeCinematicRageArt() {
+      rageArtCinematic = true;
       p1Rage = 0;
-      syncFightHUD();
-      triggerLightningFlash();
-      announce("⚡ KARACHI KING RAGE ART!! ⚡");
+      refreshFightHUD();
+      sfx('thunder');
+      showAnnouncerBanner("⚡ KARACHI RAGE ART!! ⚡");
 
-      camGoalPos.set(sumair.position.x + 1.1, 2.1, 2.7);
-      camGoalLook.set(sumair.position.x, 1.85, 0);
-      sumair.userData.pose = 'dorya';
-      emitHitSparks(sumair.position.x, 1.8, 0, 0x38bdf8, 18);
+      // Shot 1: Dramatic Close-up on Sumair charging lightning
+      camTargetPos.set(sumair.position.x + 1.2, 2.2, 2.8);
+      camLookAtPos.set(sumair.position.x, 1.9, 0);
+      sumair.userData.pose = 'launcher';
+      spawnHitSparks(sumair.position.x, 1.8, 0, 0x38bdf8, 16);
 
+      // Shot 2: Teleport dash & sky-high electric uppercut
       setTimeout(() => {
-        sumair.position.x = bossFighter.position.x - 1.05;
-        bossFighter.userData.vy = 15.5;
-        playSound('electric');
-        emitHitSparks(bossFighter.position.x, 2.3, 0, 0xfacc15, 22);
-        camGoalPos.set(bossFighter.position.x, 4.3, 6.4);
-        camGoalLook.set(bossFighter.position.x, 3.0, 0);
+        sumair.position.x = opponent.position.x - 1.1;
+        opponent.userData.vy = 15;
+        sfx('hit_heavy');
+        spawnHitSparks(opponent.position.x, 2.2, 0, 0xfacc15, 20);
+        camTargetPos.set(opponent.position.x, 4.2, 6.5);
+        camLookAtPos.set(opponent.position.x, 3.0, 0);
       }, 650);
 
+      // Shot 3: Final Slam & Massive Damage
       setTimeout(() => {
-        triggerLightningFlash();
-        bossFighter.position.y = 0;
-        bossFighter.userData.vy = 0;
-        bossFighter.userData.hp = Math.max(0, bossFighter.userData.hp - 80);
-        camShake = 0.7;
-        emitHitSparks(bossFighter.position.x, 1.2, 0, 0xef4444, 30);
-        syncFightHUD();
-        rageArtActive = false;
+        sfx('thunder');
+        opponent.position.y = 0;
+        opponent.userData.vy = 0;
+        opponent.userData.hp = Math.max(0, opponent.userData.hp - 75);
+        cameraShake = 0.65;
+        spawnHitSparks(opponent.position.x, 1.2, 0, 0xef4444, 28);
+        refreshFightHUD();
+        rageArtCinematic = false;
         sumair.userData.pose = 'guard';
 
-        if (bossFighter.userData.hp <= 0) handleFightKO();
+        if (opponent.userData.hp <= 0) {
+          triggerKnockout();
+        }
       }, 1350);
     }
 
-    function handleFightKO() {
-      bossFighter.userData.pose = 'ko';
-      triggerLightningFlash();
-      announce("K.O.!! YOU WIN!");
-      camShake = 0.55;
+    function triggerKnockout() {
+      opponent.userData.pose = 'ko';
+      sfx('thunder');
+      showAnnouncerBanner("K.O.!! SUMAIR WINS!");
+      cameraShake = 0.5;
 
       setTimeout(() => {
-        if (victoryCallback) victoryCallback();
-      }, 2100);
+        if (onMatchVictory) onMatchVictory();
+      }, 2200);
     }
 
-    function triggerThreeEndings() {
-      startCutscene([
+    // =========================================================================
+    // 8. FINAL CHOICE ENDING CUTSCENE (AFTER DEFEATING HAMZA)
+    // =========================================================================
+    function triggerFinalEndingCutscene() {
+      playCutscene([
         {
-          speaker: "📱 *HAMZA KA PHONE BAJTA HAI*",
-          color: "#f59e0b",
-          text: "*Zameen pe behosh pade Hamza ki jeb se Bilal uska phone uthata hai—Showroom wale ka message chamak raha hai: 'Hamza Sahab, Black GT ka kiraya 2 ghante overdue ho gaya hai!'*",
-          cam: [3.0, 2.1, 4.0],
-          look: [2.6, 0.6, 0]
+          speaker: "🏎️ HAMZA (KNOCKED OUT COLD)",
+          color: "#ef4444",
+          text: "*Hamza apni hi Black Sports Car ke samne barish mein behosh pada hai.*",
+          camPos: [3.2, 2.2, 4.2],
+          lookAt: [2.5, 0.6, 0]
+        },
+        {
+          speaker: "💅 MARYAM (SHOCKED & TERRIFIED)",
+          color: "#f472b6",
+          text: "Sumair...! Ruko! Mujhe maaf kar do... main toh bas tumhein jealous feel karwa rahi thi! Hamza toh kuch bhi nahi hai, chalo hum wapas chalte hain!",
+          camPos: [0.5, 2.0, 3.2],
+          lookAt: [0, 1.7, -4.0]
         },
         {
           speaker: "🧢 BILAL",
           color: "#34d399",
-          text: "HAHAHAHA! Oye Maryam sun! Jiske liye tune Sumair ko 'chota bhai' banaya, uski toh gaadi bhi Rent-a-Car ki nikli!",
-          cam: [-2.8, 2.0, 4.2],
-          look: [0, 1.6, -2.5]
-        },
-        {
-          speaker: "👑 CHOOSE YOUR ENDING",
-          color: "#38bdf8",
-          text: "Sumair ke haath mein Diamond Pendant ka dabba aur Altis 2022 ki chabi hai. Aaj raat ki kahani kaise khatam karni hai?",
-          cam: [0, 2.6, 6.8],
-          look: [0, 1.6, -1.5],
+          text: "Dekh liya bhai? Jab tak Hamza ke paas attitude tha tab tak tu 'dost' tha, aur ab girgit ki tarah rang badal gaya! Faisla tera hai Sumair:",
+          camPos: [-2.8, 2.0, 4.2],
+          lookAt: [-2.4, 1.7, 0],
           choices: [
-            { label: "🚘 Ending 1: Cold CEO Walk-Off", fn: () => playEndingEpilogue(1) },
-            { label: "🎤 Ending 2: 'Maryam Baji' Rooftop Mic Roast", fn: () => playEndingEpilogue(2) }
+            {
+              label: "🚘 Ending 1: Cold Sigma Walk-Off (Drive Away in the Altis)",
+              action: () => showEpilogue(1)
+            },
+            {
+              label: "🔥 Ending 2: Savage Payback (Toss Gift to Valet & Roast)",
+              action: () => showEpilogue(2)
+            }
           ]
         }
-      ], "FINALE • THE TRUTH REVEALED", null);
+      ], "FINAL CHAPTER • KARACHI PAYBACK", null);
     }
 
-    function playEndingEpilogue(num) {
-      sumair.userData.jacket.material.color.setHex(0xf59e0b);
-      const text = num === 1
-        ? "Sumair ne bina ek lafz bole Diamond Pendant wapas apni jeb mein rakha, Maryam ke paas se guzar kar apni Pearl-White Altis 2022 Special Edition start ki, aur Bilal ke sath Do Darya ki sadak par nikal gaya."
-        : "Sumair ne Penthouse DJ ka mic pakda aur announce kiya: 'Maryam Baji aur Hamza Bhai ko mangni mubarak ho!' Aur Bilal ke sath apni Altis mein Sea View chai peene nikal gaya! 🔥";
+    function showEpilogue(choice) {
+      const msg = choice === 1
+        ? "Sumair ne bina ek lafz bole Maryam ki taraf dekha, bouquet barish ke paani mein phenka, aur Bilal ke sath apni White Altis Special Edition start karke Sea View ki taraf nikal gaya. Maryam akeli barish mein khadi reh gayi."
+        : "Sumair ne muskura kar birthday gift Bilal ko pakdaya aur Maryam se kaha: 'Mubarak ho tumhein tumhara status—ab ambulance bula ke apne mangetar ko hospital le jao.' Aur dono dost shaan se raat ki sadkon pe nikal gaye!";
 
-      startCutscene([
+      playCutscene([
         {
-          speaker: "🎬 DIRECTOR'S CUT EPILOGUE",
-          color: "#facc15",
-          text,
-          cam: [0, 4.2, 11.5],
-          look: [0, 1.4, -2.5],
-          lightning: true,
-          choices: [{ label: "🔄 Back to Chapter Menu", fn: () => window.location.reload() }]
+          speaker: "🎬 EPILOGUE • KARACHI NIGHTS",
+          color: "#38bdf8",
+          text: msg,
+          camPos: [0, 4.5, 12],
+          lookAt: [0, 1.5, -2],
+          choices: [
+            {
+              label: "🔄 Play Again / Chapter Menu",
+              action: () => window.location.reload()
+            }
+          ]
         }
-      ], "KARACHI NIGHTS • RESPECT RESTORED", null);
+      ], "THE END • RESPECT RESTORED", null);
     }
 
     // =========================================================================
-    // 8. INPUT LISTENERS (WORKING W / S / A / D CONTROLS)
+    // 9. INPUT LISTENERS (KEYBOARD & TOUCH)
     // =========================================================================
-    const keys = { up: false, down: false, left: false, right: false };
+    const keys = { left: false, right: false };
 
     window.addEventListener('keydown', (e) => {
       const k = e.key.toLowerCase();
-      if (k === 'w' || k === 'arrowup') keys.up = true;
-      if (k === 's' || k === 'arrowdown') keys.down = true;
       if (k === 'a' || k === 'arrowleft') keys.left = true;
       if (k === 'd' || k === 'arrowright') keys.right = true;
 
       if (gameState === 'CUTSCENE' && (k === ' ' || k === 'enter')) {
-        const line = csScript[csStep];
-        if (line && !line.choices) {
+        const curLine = cutsceneLines[cutsceneIdx];
+        if (curLine && !curLine.choices) {
           e.preventDefault();
-          nextCutsceneLine();
+          advanceCutscene();
         }
       } else if (gameState === 'FIGHT') {
-        if (k === 'j') playerStrike('jab');
-        if (k === 'k') playerStrike('kick');
-        if (k === 'l') playerStrike('dorya');
-        if (k === 'u' || k === 'q') playerStrike('bilal');
-        if (k === 'r' || k === ' ') { e.preventDefault(); playerStrike('rage'); }
+        if (k === 'j') triggerPlayerMove('jab');
+        if (k === 'k') triggerPlayerMove('kick');
+        if (k === 'l') triggerPlayerMove('launcher');
+        if (k === 'u' || k === 'q') triggerPlayerMove('bilal');
+        if (k === 'r' || k === ' ') { e.preventDefault(); triggerPlayerMove('rage'); }
       }
     });
 
     window.addEventListener('keyup', (e) => {
       const k = e.key.toLowerCase();
-      if (k === 'w' || k === 'arrowup') keys.up = false;
-      if (k === 's' || k === 'arrowdown') keys.down = false;
       if (k === 'a' || k === 'arrowleft') keys.left = false;
       if (k === 'd' || k === 'arrowright') keys.right = false;
     });
 
-    // Touch button bindings for W/S/A/D
-    const btnU = document.getElementById('btn-up');
-    const btnD = document.getElementById('btn-down');
-    const bL = document.getElementById('btn-left');
-    const bR = document.getElementById('btn-right');
-
+    const btnL = document.getElementById('btn-left');
+    const btnR = document.getElementById('btn-right');
     ['mousedown', 'touchstart'].forEach((ev) => {
-      if (btnU) btnU.addEventListener(ev, (e) => { e.preventDefault(); keys.up = true; }, { passive: false });
-      if (btnD) btnD.addEventListener(ev, (e) => { e.preventDefault(); keys.down = true; }, { passive: false });
-      bL.addEventListener(ev, (e) => { e.preventDefault(); keys.left = true; }, { passive: false });
-      bR.addEventListener(ev, (e) => { e.preventDefault(); keys.right = true; }, { passive: false });
+      btnL.addEventListener(ev, (e) => { e.preventDefault(); keys.left = true; }, { passive: false });
+      btnR.addEventListener(ev, (e) => { e.preventDefault(); keys.right = true; }, { passive: false });
     });
     ['mouseup', 'mouseleave', 'touchend'].forEach((ev) => {
-      if (btnU) btnU.addEventListener(ev, () => { keys.up = false; });
-      if (btnD) btnD.addEventListener(ev, () => { keys.down = false; });
-      bL.addEventListener(ev, () => { keys.left = false; });
-      bR.addEventListener(ev, () => { keys.right = false; });
+      btnL.addEventListener(ev, () => { keys.left = false; });
+      btnR.addEventListener(ev, () => { keys.right = false; });
     });
 
     // =========================================================================
-    // 9. MAIN 60FPS GAME LOOP
+    // 10. MAIN 60FPS GAME LOOP
     // =========================================================================
     const clock = new THREE.Clock();
 
@@ -1569,8 +1652,9 @@
       requestAnimationFrame(animate);
       const rawDt = Math.min(clock.getDelta(), 0.05);
 
-      if (hitStop > 0) {
-        hitStop -= rawDt;
+      // Hit-Stop freeze for crunchy Tekken impact feel
+      if (hitStopTimer > 0) {
+        hitStopTimer -= rawDt;
         renderer.render(scene, camera);
         return;
       }
@@ -1578,132 +1662,135 @@
       const dt = rawDt;
       const elapsed = clock.getElapsedTime();
 
-      // Rain Animation
+      // 1. Animate 3D Rain
       const rArr = rainGeo.attributes.position.array;
       for (let i = 1; i < rArr.length; i += 3) {
-        rArr[i] -= 30 * dt;
-        if (rArr[i] < 0) rArr[i] = 25;
+        rArr[i] -= 28 * dt;
+        if (rArr[i] < 0) rArr[i] = 24;
       }
       rainGeo.attributes.position.needsUpdate = true;
 
+      // 2. STATE: TITLE SCREEN ORBIT CAMERA
       if (gameState === 'TITLE') {
-        camGoalPos.set(Math.sin(elapsed * 0.32) * 9.5, 3.2, 8.8);
-        camGoalLook.set(0, 1.4, -1.5);
+        camTargetPos.set(Math.sin(elapsed * 0.35) * 9, 3.2, 8.5);
+        camLookAtPos.set(0, 1.4, -1.5);
       }
 
-      // DRIVING PHYSICS (Fully responsive W / S / A / D)
+      // 3. STATE: CHAPTER 1 HIGHWAY DRIVE
       else if (gameState === 'DRIVE') {
-        // Acceleration & Braking with W / S
-        if (keys.up) carSpeedZ = Math.min(26, carSpeedZ + 12 * dt);
-        else if (keys.down) carSpeedZ = Math.max(4, carSpeedZ - 16 * dt);
-        else carSpeedZ = Math.max(12, carSpeedZ - 4 * dt); // Natural slowdown
+        asphaltTex.offset.y -= 1.8 * dt;
+        driveProgress = Math.min(100, driveProgress + 11 * dt);
+        document.getElementById('drive-progress').style.width = driveProgress + '%';
+        document.getElementById('drive-dist-txt').textContent = Math.round(driveProgress) + '% to Clifton';
 
-        roadTex.offset.y -= (carSpeedZ * 0.12) * dt;
-        driveProgress = Math.min(100, driveProgress + (carSpeedZ * 0.065) * dt);
-        document.getElementById('drive-fill').style.width = driveProgress + '%';
-        document.getElementById('drive-pct').textContent = Math.round(driveProgress) + '%';
+        if (keys.left) sumairAltis.position.x = Math.max(-6.5, sumairAltis.position.x - 11 * dt);
+        if (keys.right) sumairAltis.position.x = Math.min(6.5, sumairAltis.position.x + 11 * dt);
+        sumairAltis.rotation.z = (keys.left ? 0.04 : keys.right ? -0.04 : 0);
 
-        // Steering with A / D
-        if (keys.left) sumairAltis.position.x = Math.max(-7.2, sumairAltis.position.x - 12 * dt);
-        if (keys.right) sumairAltis.position.x = Math.min(7.2, sumairAltis.position.x + 12 * dt);
-        sumairAltis.rotation.z = keys.left ? 0.05 : keys.right ? -0.05 : 0;
-
-        trafficPool.forEach((tc) => {
-          tc.z += (carSpeedZ + 6) * dt;
+        trafficCars.forEach((tc) => {
+          tc.z += 24 * dt;
           if (tc.z > 16) {
-            tc.z = -105;
-            tc.laneX = [-5.6, -1.9, 1.9, 5.6][Math.floor(Math.random() * 4)];
+            tc.z = -95;
+            tc.laneX = [-5.5, -1.8, 1.8, 5.5][Math.floor(Math.random() * 4)];
           }
           tc.mesh.position.set(tc.laneX, 0, tc.z);
 
-          if (Math.abs(tc.z - sumairAltis.position.z) < 3.9 && Math.abs(tc.laneX - sumairAltis.position.x) < 2.05) {
-            playSound('heavy');
-            camShake = 0.35;
-            carSpeedZ = Math.max(4, carSpeedZ - 8);
-            tc.z = -105;
-            document.getElementById('drive-radio').textContent = '🧢 Bilal: "Oye bach ke! Bumper touch ho gaya!"';
+          // Check near-miss or bump
+          if (Math.abs(tc.z - sumairAltis.position.z) < 3.8 && Math.abs(tc.laneX - sumairAltis.position.x) < 2.0) {
+            sfx('block');
+            cameraShake = 0.3;
+            tc.z = -95;
+            document.getElementById('drive-banter').textContent = '🧢 Bilal: "Oye dekh ke Sumair! Maryam ka birthday cake piche ulat jayega!"';
           }
         });
 
-        camGoalPos.set(sumairAltis.position.x * 0.55, 3.7, 11.8);
-        camGoalLook.set(sumairAltis.position.x * 0.35, 1.0, -14);
+        camTargetPos.set(sumairAltis.position.x * 0.6, 3.8, 12.5);
+        camLookAtPos.set(sumairAltis.position.x * 0.4, 1.0, -12);
 
         if (driveProgress >= 100) {
-          launchChapter(activeChapter === 1 ? 2 : 5);
+          startStoryChapter(2);
         }
       }
 
+      // 4. STATE: TEKKEN 8 2.5D FIGHT
       else if (gameState === 'FIGHT') {
         const u = sumair.userData;
-        const bu = bossFighter.userData;
+        const oppU = opponent.userData;
 
-        if (!rageArtActive && bu.hp > 0) {
+        // Player Horizontal Movement & Blocking
+        if (!rageArtCinematic && oppU.hp > 0) {
           u.blocking = false;
           if (keys.left) {
-            sumair.position.x = Math.max(-7.5, sumair.position.x - 6.6 * dt);
-            u.blocking = true;
+            sumair.position.x = Math.max(-7.5, sumair.position.x - 6.5 * dt);
+            u.blocking = true; // Holding back blocks in Tekken!
             if (u.pose === 'guard' || u.pose === 'walk') u.pose = 'block';
           } else if (keys.right) {
-            sumair.position.x = Math.min(bossFighter.position.x - 1.2, sumair.position.x + 7.4 * dt);
-            if (u.pose === 'walk' || u.pose === 'block') u.pose = 'walk';
+            sumair.position.x = Math.min(opponent.position.x - 1.2, sumair.position.x + 7.2 * dt);
+            if (u.pose === 'guard' || u.pose === 'block') u.pose = 'walk';
           } else if (u.pose === 'walk' || u.pose === 'block') {
             u.pose = 'guard';
           }
         }
 
-        if (bossFighter.position.y > 0 || bu.vy !== 0) {
-          bu.vy -= 28 * dt;
-          bossFighter.position.y = Math.max(0, bossFighter.position.y + bu.vy * dt);
-          if (bossFighter.position.y === 0) bu.vy = 0;
+        // Opponent Air-Juggle Gravity
+        if (opponent.position.y > 0 || oppU.vy !== 0) {
+          oppU.vy -= 28 * dt;
+          opponent.position.y = Math.max(0, opponent.position.y + oppU.vy * dt);
+          if (opponent.position.y === 0) oppU.vy = 0;
         }
 
-        if (!rageArtActive && bu.hp > 0 && bossFighter.position.y === 0) {
-          const dist = bossFighter.position.x - sumair.position.x;
+        // Opponent Fighting AI
+        if (!rageArtCinematic && oppU.hp > 0 && opponent.position.y === 0) {
+          const dist = opponent.position.x - sumair.position.x;
           if (dist > 2.15) {
-            bossFighter.position.x -= 5.0 * dt;
-            bu.pose = 'walk';
+            opponent.position.x -= 4.8 * dt;
+            oppU.pose = 'walk';
           } else {
-            aiCooldown -= dt;
-            if (aiCooldown <= 0) {
-              aiCooldown = 1.0 + Math.random() * 0.55;
-              bu.pose = Math.random() > 0.45 ? 'jab2' : 'kick';
+            aiActionTimer -= dt;
+            if (aiActionTimer <= 0) {
+              aiActionTimer = 1.05 + Math.random() * 0.6;
+              oppU.pose = Math.random() > 0.45 ? 'jab2' : 'kick';
 
               if (u.blocking) {
-                playSound('ui');
-                emitHitSparks(sumair.position.x + 0.5, 1.7, 0, 0x38bdf8, 6);
+                // Blocked! Blue sparks & minimal chip damage
+                sfx('block');
+                spawnHitSparks(sumair.position.x + 0.5, 1.7, 0, 0x38bdf8, 5);
                 p1Rage = Math.min(100, p1Rage + 10);
               } else {
-                playSound('light');
+                sfx('hit_light');
                 u.hp = Math.max(15, u.hp - 9);
-                p1Rage = Math.min(100, p1Rage + 15);
+                p1Rage = Math.min(100, p1Rage + 14);
                 u.pose = 'hitstun';
-                camShake = 0.22;
-                emitHitSparks(sumair.position.x + 0.4, 1.7, 0, 0xef4444, 8);
+                cameraShake = 0.2;
+                spawnHitSparks(sumair.position.x + 0.4, 1.7, 0, 0xef4444, 7);
               }
-              syncFightHUD();
+              refreshFightHUD();
               setTimeout(() => {
-                if (bu.hp > 0) bu.pose = 'guard';
+                if (oppU.hp > 0) oppU.pose = 'guard';
                 if (u.hp > 0) u.pose = 'guard';
               }, 260);
             }
           }
         }
 
-        if (!rageArtActive) {
-          const midX = (sumair.position.x + bossFighter.position.x) * 0.5;
-          const span = Math.abs(bossFighter.position.x - sumair.position.x);
-          camGoalPos.set(midX, 2.3 + bossFighter.position.y * 0.25, 6.7 + span * 0.45);
-          camGoalLook.set(midX, 1.55 + bossFighter.position.y * 0.3, 0);
+        // Dynamic Tekken 2.5D Side Camera framing both fighters
+        if (!rageArtCinematic) {
+          const midX = (sumair.position.x + opponent.position.x) * 0.5;
+          const distSpan = Math.abs(opponent.position.x - sumair.position.x);
+          camTargetPos.set(midX, 2.35 + opponent.position.y * 0.25, 6.8 + distSpan * 0.45);
+          camLookAtPos.set(midX, 1.55 + opponent.position.y * 0.3, 0);
         }
       }
 
-      animateFighterPose(sumair, dt, elapsed);
-      animateFighterPose(bilal, dt, elapsed);
-      animateFighterPose(maryam, dt, elapsed);
-      animateFighterPose(bossFighter, dt, elapsed);
+      // 5. Update Character Rigs
+      updateFighterPose(sumair, dt, elapsed);
+      updateFighterPose(bilal, dt, elapsed);
+      updateFighterPose(maryam, dt, elapsed);
+      updateFighterPose(opponent, dt, elapsed);
 
-      for (let i = sparks.length - 1; i >= 0; i--) {
-        const sp = sparks[i];
+      // 6. Update Sparks & Combo Timer
+      for (let i = sparkParticles.length - 1; i >= 0; i--) {
+        const sp = sparkParticles[i];
         sp.mesh.position.x += sp.vx * dt;
         sp.mesh.position.y += sp.vy * dt;
         sp.mesh.position.z += sp.vz * dt;
@@ -1711,25 +1798,26 @@
         sp.mesh.scale.setScalar(Math.max(0.01, sp.life * 3.5));
         if (sp.life <= 0) {
           scene.remove(sp.mesh);
-          sparks.splice(i, 1);
+          sparkParticles.splice(i, 1);
         }
       }
 
-      if (comboTimer > 0) {
-        comboTimer -= dt;
-        if (comboTimer <= 0) {
-          comboHits = 0;
-          document.getElementById('combo-hud').style.opacity = '0';
+      if (comboDecay > 0) {
+        comboDecay -= dt;
+        if (comboDecay <= 0) {
+          comboCount = 0;
+          document.getElementById('combo-box').style.opacity = '0';
         }
       }
 
-      camera.position.lerp(camGoalPos, Math.min(1, dt * 6.5));
-      if (camShake > 0) {
-        camera.position.x += (Math.random() - 0.5) * camShake;
-        camera.position.y += (Math.random() - 0.5) * camShake;
-        camShake = Math.max(0, camShake - dt * 2.2);
+      // 7. Smooth Camera Interpolation + Hit Shake
+      camera.position.lerp(camTargetPos, Math.min(1, dt * 6.5));
+      if (cameraShake > 0) {
+        camera.position.x += (Math.random() - 0.5) * cameraShake;
+        camera.position.y += (Math.random() - 0.5) * cameraShake;
+        cameraShake = Math.max(0, cameraShake - dt * 2.2);
       }
-      camera.lookAt(camGoalLook);
+      camera.lookAt(camLookAtPos);
 
       renderer.render(scene, camera);
     }
