@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>KARACHI NIGHTS: Director's Cut (Working Car Controls)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #03050a;
+      color: #fff;
+    }
+    #game-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Cinematic Vignette & Letterbox */
+    #vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at center, transparent 55%, rgba(0, 0, 0, 0.75) 100%);
+      z-index: 10;
+    }
+    .letterbox {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 0;
+      background: #000;
+      z-index: 15;
+      transition: height 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+    #lb-top { top: 0; }
+    #lb-bottom { bottom: 0; }
+    body.cutscene-active #lb-top,
+    body.cutscene-active #lb-bottom {
+      height: 10.5vh;
+    }
+
+    /* TITLE SCREEN */
+    #title-screen {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(3, 5, 10, 0.94) 0%, rgba(3, 5, 10, 0.72) 55%, rgba(3, 5, 10, 0.25) 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 6vw;
+      z-index: 50;
+      transition: opacity 0.45s ease;
+    }
+    .tag-pill {
+      width: fit-content;
+      background: rgba(225, 29, 72, 0.22);
+      border: 1px solid #f43f5e;
+      color: #fda4af;
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      padding: 5px 12px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .hero-title {
+      font-size: clamp(34px, 5.8vw, 72px);
+      font-weight: 900;
+      line-height: 0.94;
+      letter-spacing: -1.5px;
+      text-transform: uppercase;
+      background: linear-gradient(95deg, #ffffff 0%, #93c5fd 55%, #f43f5e 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 14px;
+    }
+    .hero-desc {
+      max-width: 580px;
+      font-size: clamp(14px, 1.6vw, 17.5px);
+      color: #cbd5e1;
+      line-height: 1.55;
+      margin-bottom: 24px;
+    }
+    .chapter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+      max-width: 740px;
+    }
+    .chap-btn {
+      padding: 13px 16px;
+      background: rgba(15, 23, 42, 0.86);
+      border: 1.5px solid rgba(148, 163, 184, 0.3);
+      border-radius: 8px;
+      color: #f8fafc;
+      font-size: 13px;
+      font-weight: 800;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .chap-btn span {
+      display: block;
+      font-size: 10.5px;
+      color: #94a3b8;
+      font-weight: 600;
+      margin-top: 3px;
+    }
+    .chap-btn.primary {
+      background: linear-gradient(135deg, #e11d48, #9f1239);
+      border-color: #fda4af;
+      box-shadow: 0 0 28px rgba(225, 29, 72, 0.45);
+    }
+    .chap-btn.primary span {
+      color: #ffe4e6;
+    }
+    .chap-btn:hover {
+      transform: translateY(-2px);
+      border-color: #fff;
+    }
+
+    /* CUTSCENE DIALOGUE BOX */
+    #cutscene-box {
+      position: absolute;
+      bottom: 2.8vh;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(94%, 840px);
+      background: linear-gradient(180deg, rgba(10, 14, 26, 0.94), rgba(3, 5, 10, 0.98));
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      border-left: 5px solid #e11d48;
+      border-radius: 10px;
+      padding: 18px 24px;
+      z-index: 35;
+      display: none;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+    }
+    .cs-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 7px;
+    }
+    #cs-speaker {
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: #fbbf24;
+    }
+    #cs-meta {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    #cs-body {
+      font-size: 16.5px;
+      line-height: 1.55;
+      color: #f1f5f9;
+      min-height: 52px;
+      margin-bottom: 14px;
+    }
+    .cs-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .cs-btn {
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #fff;
+      padding: 9px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .cs-btn.cta {
+      background: linear-gradient(135deg, #e11d48, #be123c);
+      border-color: #fda4af;
+    }
+    .cs-btn:hover {
+      filter: brightness(1.15);
+    }
+
+    /* DRIVING HUD */
+    #drive-hud {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(94%, 680px);
+      background: rgba(9, 13, 24, 0.88);
+      border: 1.5px solid rgba(56, 189, 248, 0.45);
+      border-radius: 12px;
+      padding: 12px 18px;
+      z-index: 25;
+      display: none;
+      backdrop-filter: blur(8px);
+    }
+    .drive-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 7px;
+    }
+    .bar-bg {
+      width: 100%;
+      height: 12px;
+      background: #0f172a;
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid #334155;
+    }
+    #drive-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #38bdf8, #22c55e);
+      transition: width 0.1s linear;
+    }
+    #drive-radio {
+      margin-top: 8px;
+      font-size: 13.5px;
+      color: #fde047;
+      font-weight: 600;
+    }
+
+    /* TEKKEN 8 FIGHT HUD */
+    #fight-hud {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(96%, 1040px);
+      z-index: 25;
+      display: none;
+      pointer-events: none;
+    }
+    .tk-grid {
+      display: grid;
+      grid-template-columns: 1fr 74px 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+    .tk-col {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .tk-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-shadow: 0 2px 6px #000;
+    }
+    .tk-hp-box {
+      height: 26px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 2px solid #f1f5f9;
+      transform: skewX(-16deg);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.75);
+    }
+    .tk-hp-trail {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      background: #dc2626;
+      transition: width 0.55s ease;
+    }
+    .tk-hp-bar {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      background: linear-gradient(90deg, #facc15, #22c55e);
+      transition: width 0.08s linear;
+    }
+    .tk-hp-bar.enemy {
+      background: linear-gradient(90deg, #f43f5e, #be123c);
+    }
+    .tk-rage-box {
+      width: 72%;
+      height: 10px;
+      background: #090d16;
+      border: 1px solid #64748b;
+      transform: skewX(-16deg);
+      overflow: hidden;
+    }
+    #p1-rage-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #38bdf8, #ef4444);
+      transition: width 0.15s ease;
+    }
+    .tk-timer {
+      height: 58px;
+      background: radial-gradient(circle, #1e293b, #090d16);
+      border: 2px solid #fbbf24;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 27px;
+      font-weight: 900;
+      color: #fef08a;
+      box-shadow: 0 0 20px rgba(251, 191, 36, 0.35);
+    }
+
+    /* ANNOUNCER & COMBO */
+    #announcer {
+      position: absolute;
+      top: 37%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.75);
+      font-size: clamp(28px, 5.2vw, 62px);
+      font-weight: 900;
+      font-style: italic;
+      text-transform: uppercase;
+      color: #fef08a;
+      text-shadow: 0 0 30px #e11d48, 0 6px 14px #000;
+      z-index: 40;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      white-space: nowrap;
+    }
+    #announcer.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    #combo-hud {
+      position: absolute;
+      top: 126px;
+      left: 26px;
+      z-index: 26;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    #combo-count {
+      font-size: 46px;
+      font-weight: 900;
+      font-style: italic;
+      color: #fbbf24;
+      text-shadow: 3px 3px 0 #be123c;
+      line-height: 1;
+    }
+    #combo-name {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      color: #e2e8f0;
+      text-transform: uppercase;
+    }
+
+    /* CONTROLS BAR */
+    #controls-bar {
+      position: absolute;
+      bottom: 14px;
+      left: 14px;
+      right: 14px;
+      display: none;
+      justify-content: space-between;
+      align-items: flex-end;
+      z-index: 28;
+      pointer-events: none;
+    }
+    .btn-row {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      pointer-events: auto;
+    }
+    .ctrl-btn {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
+      touch-action: manipulation;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
+    }
+    .ctrl-btn:active {
+      transform: scale(0.93);
+    }
+    .ctrl-btn.j { border-color: #60a5fa; background: rgba(30, 58, 138, 0.88); }
+    .ctrl-btn.k { border-color: #34d399; background: rgba(6, 78, 59, 0.88); }
+    .ctrl-btn.l { border-color: #fbbf24; background: rgba(120, 53, 15, 0.88); }
+    .ctrl-btn.u { border-color: #a78bfa; background: rgba(76, 29, 149, 0.88); }
+    .ctrl-btn.r {
+      border-color: #fde047;
+      background: linear-gradient(135deg, #dc2626, #991b1b);
+      animation: rageGlow 1.1s infinite;
+    }
+    @keyframes rageGlow {
+      0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+      50% { box-shadow: 0 0 24px rgba(250, 204, 21, 0.95); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="vignette"></div>
+  <div id="lb-top" class="letterbox"></div>
+  <div id="lb-bottom" class="letterbox"></div>
+
+  <!-- TITLE SCREEN -->
+  <div id="title-screen">
+    <div class="tag-pill">Director's Cut • 6-Chapter Karachi Noir & Tekken 8 Combat</div>
+    <div class="hero-title">KARACHI NIGHTS<br>ISHQ, DHOKHA & BADLA</div>
+    <div class="hero-desc">
+      Sumair ne apni 3 mahine ki agency kamai se Maryam ke liye Diamond Pendant khareeda aur apni <strong>2022 Corolla Altis Special Edition</strong> le kar raat ke 11:30 baje Bilal ke sath nikla. Lekin Tariq Road se le kar Do Darya Penthouse तक aaj raat ek aisi saazish khulne wali hai jo sab kuch badal degi.
+    </div>
+    <div class="chapter-grid">
+      <button class="chap-btn primary" onclick="launchChapter(1)">
+        ▶ Ch 1: Shahrah-e-Faisal Rush
+        <span>11:30 PM • High-Speed Altis 2022 Drive (W/S/A/D)</span>
+      </button>
+      <button class="chap-btn" onclick="launchChapter(2)">
+        🥊 Ch 2: Tariq Road Ambush
+        <span>12:00 AM • Fight #1 vs Sherry "Meter-Down"</span>
+      </button>
+      <button class="chap-btn" onclick="launchChapter(3)">
+        🌊 Ch 3: Clifton Sea View Setup
+        <span>12:30 AM • Fight #2 vs Raza (Bodyguard)</span>
+      </button>
+      <button class="chap-btn" onclick="launchChapter(4)">
+        🚔 Ch 4: Do Darya SUV Pursuit
+        <span>1:00 AM • Dodge Hamza's BlackVigo Squad</span>
+      </button>
+      <button class="chap-btn" onclick="launchChapter(5)">
+        💔 Ch 5: The Penthouse Betrayal
+        <span>1:30 AM • Full Cutscene + Fight #3 vs Daniyal</span>
+      </button>
+      <button class="chap-btn" onclick="launchChapter(6)">
+        ⚡ Ch 6: Final Boss (Hamza_DHA)
+        <span>2:00 AM • Storm Final Battle & 3 Endings</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- DRIVING HUD -->
+  <div id="drive-hud">
+    <div class="drive-top">
+      <span id="drive-stage-name" style="color:#38bdf8;">🚘 Altis 2022 SE • Shahrah-e-Faisal</span>
+      <span id="drive-pct">0%</span>
+    </div>
+    <div class="bar-bg">
+      <div id="drive-fill"></div>
+    </div>
+    <div id="drive-radio">🧢 Bilal: "Bhai [W/S] se speed control kar aur [A/D] se steer kar!"</div>
+  </div>
+
+  <!-- TEKKEN 8 FIGHT HUD -->
+  <div id="fight-hud">
+    <div class="tk-grid">
+      <div class="tk-col">
+        <div class="tk-meta">
+          <span style="color:#60a5fa;">SUMAIR (KARACHI KING)</span>
+          <span id="p1-hp-txt">100%</span>
+        </div>
+        <div class="tk-hp-box">
+          <div id="p1-hp-trail" class="tk-hp-trail"></div>
+          <div id="p1-hp-bar" class="tk-hp-bar"></div>
+        </div>
+        <div class="tk-rage-box">
+          <div id="p1-rage-fill"></div>
+        </div>
+      </div>
+
+      <div class="tk-timer" id="tk-timer">99</div>
+
+      <div class="tk-col" style="align-items:flex-end;">
+        <div class="tk-meta" style="width:100%;">
+          <span id="p2-hp-txt">100%</span>
+          <span id="p2-name-txt" style="color:#fb7185;">BOSS</span>
+        </div>
+        <div class="tk-hp-box" style="width:100%;">
+          <div id="p2-hp-trail" class="tk-hp-trail"></div>
+          <div id="p2-hp-bar" class="tk-hp-bar enemy"></div>
+        </div>
+        <div class="tk-rage-box">
+          <div style="width:100%; height:100%; background:#e11d48;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER ANNOUNCER & COMBO -->
+  <div id="announcer">FIGHT!</div>
+  <div id="combo-hud">
+    <div id="combo-count">4 HITS</div>
+    <div id="combo-name">ELECTRIC WIND GOD FIST</div>
+  </div>
+
+  <!-- CUTSCENE DIALOGUE BOX -->
+  <div id="cutscene-box">
+    <div class="cs-header">
+      <span id="cs-speaker">SUMAIR</span>
+      <span id="cs-meta">CHAPTER 1</span>
+    </div>
+    <div id="cs-body">...</div>
+    <div class="cs-actions" id="cs-actions"></div>
+  </div>
+
+  <!-- BOTTOM CONTROLS BAR -->
+  <div id="controls-bar">
+    <div class="btn-row">
+      <button class="ctrl-btn" id="btn-left">◀ Steer Left [A]</button>
+      <button class="ctrl-btn" id="btn-right">Steer Right ▶ [D]</button>
+      <button class="ctrl-btn" id="btn-up">Accelerator [W]</button>
+      <button class="ctrl-btn" id="btn-down">Brake/Rev [S]</button>
+    </div>
+    <div class="btn-row" id="fight-buttons">
+      <button class="ctrl-btn j" onclick="playerStrike('jab')">🥊 [J] 3-Hit Combo</button>
+      <button class="ctrl-btn k" onclick="playerStrike('kick')">🦵 [K] Spinning Kick</button>
+      <button class="ctrl-btn l" onclick="playerStrike('dorya')">⚡ [L] DORYA Launcher</button>
+      <button class="ctrl-btn u" onclick="playerStrike('bilal')">🧢 [U] Bilal Tag-In</button>
+      <button class="ctrl-btn r" onclick="playerStrike('rage')">🔥 [R] RAGE ART</button>
+    </div>
+  </div>
+
+  <canvas id="game-canvas"></canvas>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // =========================================================================
+    // 1. SYNTHESIZED SOUND ENGINE (TEKKEN IMPACTS, THUNDER, TURBO)
+    // =========================================================================
+    let audioCtx = null;
+    function playSound(type) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const t = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'light') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(250, t);
+          osc.frequency.exponentialRampToValueAtTime(45, t + 0.09);
+          gain.gain.setValueAtTime(0.22, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+          osc.start(t);
+          osc.stop(t + 0.09);
+        } else if (type === 'heavy') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(165, t);
+          osc.frequency.exponentialRampToValueAtTime(28, t + 0.22);
+          gain.gain.setValueAtTime(0.36, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+          osc.start(t);
+          osc.stop(t + 0.22);
+        } else if (type === 'electric') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(580, t);
+          osc.frequency.exponentialRampToValueAtTime(85, t + 0.28);
+          gain.gain.setValueAtTime(0.3, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+          osc.start(t);
+          osc.stop(t + 0.28);
+        } else if (type === 'thunder') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(90, t);
+          osc.frequency.exponentialRampToValueAtTime(20, t + 0.7);
+          gain.gain.setValueAtTime(0.35, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+          osc.start(t);
+          osc.stop(t + 0.7);
+        } else if (type === 'ui') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(520, t);
+          osc.frequency.exponentialRampToValueAtTime(780, t + 0.06);
+          gain.gain.setValueAtTime(0.1, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+          osc.start(t);
+          osc.stop(t + 0.06);
+        }
+      } catch (e) {}
+    }
+
+    // =========================================================================
+    // 2. HIGH-RES PROCEDURAL TEXTURES & BUMP MAPS
+    // =========================================================================
+    function makeWetAsphaltTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#0c101a';
+      ctx.fillRect(0, 0, 512, 512);
+
+      for (let i = 0; i < 3500; i++) {
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(148,163,184,0.04)' : 'rgba(0,0,0,0.22)';
+        ctx.fillRect(Math.random() * 512, Math.random() * 512, 3, 6);
+      }
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(20, 0, 8, 512);
+      ctx.fillRect(484, 0, 8, 512);
+      ctx.fillStyle = '#cbd5e1';
+      for (let y = 0; y < 512; y += 64) {
+        ctx.fillRect(172, y, 6, 36);
+        ctx.fillRect(334, y, 6, 36);
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(1, 16);
+      return tex;
+    }
+
+    function makeSkyscraperTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#070b14';
+      ctx.fillRect(0, 0, 256, 512);
+      for (let y = 16; y < 496; y += 24) {
+        for (let x = 14; x < 236; x += 28) {
+          const r = Math.random();
+          if (r > 0.42) {
+            ctx.fillStyle = r > 0.86 ? '#38bdf8' : r > 0.72 ? '#fb7185' : '#fef08a';
+          } else {
+            ctx.fillStyle = '#0f172a';
+          }
+          ctx.fillRect(x, y, 18, 14);
+        }
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    function makeBillboardTexture(title, subtitle, borderHex) {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 160;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#090d18';
+      ctx.fillRect(0, 0, 512, 160);
+      ctx.strokeStyle = borderHex;
+      ctx.lineWidth = 8;
+      ctx.strokeRect(6, 6, 500, 148);
+      ctx.shadowColor = borderHex;
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 38px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(title, 256, 72);
+      ctx.fillStyle = borderHex;
+      ctx.font = '700 20px Segoe UI, sans-serif';
+      ctx.fillText(subtitle, 256, 118);
+      return new THREE.CanvasTexture(c);
+    }
+
+    // =========================================================================
+    // 3. THREE.JS SCENE WITH ACES FILMIC TONE MAPPING & WEATHER
+    // =========================================================================
+    const canvas = document.getElementById('game-canvas');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x040710);
+    scene.fog = new THREE.FogExp2(0x040710, 0.011);
+
+    const camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.5, 320);
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      logarithmicDepthBuffer: true
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.25;
+
+    const hemiLight = new THREE.HemisphereLight(0x60a5fa, 0x090d16, 0.75);
+    scene.add(hemiLight);
+
+    const moonDirLight = new THREE.DirectionalLight(0xe0f2fe, 1.35);
+    moonDirLight.position.set(16, 38, 24);
+    moonDirLight.castShadow = true;
+    scene.add(moonDirLight);
+
+    const arenaNeonLight = new THREE.PointLight(0xe11d48, 3.2, 28);
+    arenaNeonLight.position.set(0, 6, -5);
+    scene.add(arenaNeonLight);
+
+    const cyanRimLight = new THREE.PointLight(0x38bdf8, 2.4, 24);
+    cyanRimLight.position.set(-6, 4, 3);
+    scene.add(cyanRimLight);
+
+    const roadTex = makeWetAsphaltTexture();
+    const roadMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(24, 340),
+      new THREE.MeshStandardMaterial({
+        map: roadTex,
+        roughness: 0.16,
+        metalness: 0.45
+      })
+    );
+    roadMesh.rotation.x = -Math.PI / 2;
+    roadMesh.receiveShadow = true;
+    scene.add(roadMesh);
+
+    const bldgTex = makeSkyscraperTexture();
+    for (let z = -150; z <= 90; z += 18) {
+      const hL = 18 + (Math.abs(z * 11) % 26);
+      const bL = new THREE.Mesh(
+        new THREE.BoxGeometry(11, hL, 13),
+        new THREE.MeshStandardMaterial({ map: bldgTex, roughness: 0.5 })
+      );
+      bL.position.set(-18.5, hL / 2, z);
+      scene.add(bL);
+
+      const hR = 16 + (Math.abs(z * 17) % 28);
+      const bR = new THREE.Mesh(
+        new THREE.BoxGeometry(11, hR, 13),
+        new THREE.MeshStandardMaterial({ map: bldgTex, roughness: 0.5 })
+      );
+      bR.position.set(18.5, hR / 2, z);
+      scene.add(bR);
+    }
+
+    const billboardMat = new THREE.MeshBasicMaterial({
+      map: makeBillboardTexture('SHAHRAH-E-FAISAL', 'KARACHI MIDNIGHT EXPRESS', '#38bdf8')
+    });
+    const billboardMesh = new THREE.Mesh(new THREE.BoxGeometry(13, 3.6, 0.4), billboardMat);
+    billboardMesh.position.set(0, 5.6, -9.8);
+    scene.add(billboardMesh);
+
+    function setBillboard(title, sub, hex) {
+      billboardMat.map = makeBillboardTexture(title, sub, hex);
+      billboardMat.needsUpdate = true;
+      arenaNeonLight.color.set(hex);
+    }
+
+    const rainGeo = new THREE.BufferGeometry();
+    const rainCount = 1100;
+    const rainPos = new Float32Array(rainCount * 3);
+    for (let i = 0; i < rainCount * 3; i += 3) {
+      rainPos[i] = (Math.random() - 0.5) * 48;
+      rainPos[i + 1] = Math.random() * 26;
+      rainPos[i + 2] = (Math.random() - 0.5) * 48;
+    }
+    rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
+    const rainSystem = new THREE.Points(
+      rainGeo,
+      new THREE.PointsMaterial({ color: 0x93c5fd, size: 0.13, transparent: true, opacity: 0.65 })
+    );
+    scene.add(rainSystem);
+
+    const boltGroup = new THREE.Group();
+    for (let i = 0; i < 6; i++) {
+      const seg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.08, 0.08, 4.5, 6),
+        new THREE.MeshBasicMaterial({ color: 0xe0f2fe })
+      );
+      seg.position.set((i % 2 === 0 ? 0.4 : -0.4), 22 - i * 3.8, -14);
+      boltGroup.add(seg);
+    }
+    boltGroup.visible = false;
+    scene.add(boltGroup);
+
+    function triggerLightningFlash() {
+      playSound('thunder');
+      boltGroup.visible = true;
+      boltGroup.position.x = (Math.random() - 0.5) * 14;
+      renderer.toneMappingExposure = 2.4;
+      setTimeout(() => {
+        boltGroup.visible = false;
+        renderer.toneMappingExposure = 1.25;
+      }, 180);
+    }
+
+    // =========================================================================
+    // 4. COROLLA ALTIS 2022 SPECIAL EDITION MODEL
+    // =========================================================================
+    function buildSculptedCar({ bodyHex = 0xf8fafc, roofHex = 0x090d16, hasLightBeams = false }) {
+      const car = new THREE.Group();
+      const paintMat = new THREE.MeshStandardMaterial({ color: bodyHex, metalness: 0.7, roughness: 0.18 });
+      const glassMat = new THREE.MeshStandardMaterial({ color: roofHex, metalness: 0.85, roughness: 0.1 });
+      const grilleMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.5 });
+
+      const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.72, 4.9), paintMat);
+      chassis.position.y = 0.62;
+      chassis.castShadow = true;
+      car.add(chassis);
+
+      const grille = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.42, 0.12), grilleMat);
+      grille.position.set(0, 0.55, -2.42);
+      car.add(grille);
+
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.98, 0.62, 2.55), glassMat);
+      cabin.position.set(0, 1.25, -0.1);
+      car.add(cabin);
+
+      const spoiler = new THREE.Mesh(new THREE.BoxGeometry(2.15, 0.09, 0.36), glassMat);
+      spoiler.position.set(0, 1.08, 2.28);
+      car.add(spoiler);
+
+      const hlMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe });
+      const hlL = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.16, 0.1), hlMat);
+      hlL.position.set(-0.78, 0.74, -2.43);
+      const hlR = hlL.clone();
+      hlR.position.x = 0.78;
+      car.add(hlL, hlR);
+
+      const tlMat = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
+      const tlBar = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.16, 0.1), tlMat);
+      tlBar.position.set(0, 0.78, 2.43);
+      car.add(tlBar);
+
+      if (hasLightBeams) {
+        const coneGeo = new THREE.ConeGeometry(1.6, 9, 16, 1, true);
+        coneGeo.rotateX(Math.PI / 2);
+        const coneMat = new THREE.MeshBasicMaterial({
+          color: 0xe0f2fe,
+          transparent: true,
+          opacity: 0.11,
+          side: THREE.DoubleSide,
+          depthWrite: false
+        });
+        const beamL = new THREE.Mesh(coneGeo, coneMat);
+        beamL.position.set(-0.8, 0.6, -6.9);
+        const beamR = beamL.clone();
+        beamR.position.x = 0.8;
+        car.add(beamL, beamR);
+      }
+
+      const tireGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 18);
+      tireGeo.rotateZ(Math.PI / 2);
+      const tireMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.7 });
+      const rimGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.32, 12);
+      rimGeo.rotateZ(Math.PI / 2);
+      const rimMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.2 });
+
+      [[-1.18, -1.55], [1.18, -1.55], [-1.18, 1.55], [1.18, 1.55]].forEach(([wx, wz]) => {
+        const tire = new THREE.Mesh(tireGeo, tireMat);
+        tire.position.set(wx, 0.4, wz);
+        const rim = new THREE.Mesh(rimGeo, rimMat);
+        rim.position.set(wx, 0.4, wz);
+        car.add(tire, rim);
+      });
+
+      return car;
+    }
+
+    const sumairAltis = buildSculptedCar({ bodyHex: 0xf8fafc, roofHex: 0x090d16, hasLightBeams: true });
+    sumairAltis.position.set(0, 0, 4);
+    sumairAltis.rotation.y = 0;
+    scene.add(sumairAltis);
+
+    const hamzaGT = buildSculptedCar({ bodyHex: 0x111827, roofHex: 0xdc2626, hasLightBeams: true });
+    hamzaGT.position.set(5.8, 0, -4.5);
+    hamzaGT.rotation.y = -0.38;
+    hamzaGT.visible = false;
+    scene.add(hamzaGT);
+
+    // =========================================================================
+    // 5. DETAILED FIGHTERS BUILDER
+    // =========================================================================
+    function buildDetailedFighter({
+      jacketHex = 0x1e40af,
+      shirtHex = 0xf8fafc,
+      pantsHex = 0x090d16,
+      skinHex = 0xf5d0a9,
+      hairHex = 0x090d16,
+      auraHex = 0x38bdf8,
+      isFemale = false,
+      scale = 1
+    }) {
+      const root = new THREE.Group();
+      root.scale.setScalar(scale);
+
+      const skinMat = new THREE.MeshStandardMaterial({ color: skinHex, roughness: 0.42 });
+      const jacketMat = new THREE.MeshStandardMaterial({ color: jacketHex, roughness: 0.3, metalness: 0.25 });
+      const shirtMat = new THREE.MeshStandardMaterial({ color: shirtHex, roughness: 0.55 });
+      const pantsMat = new THREE.MeshStandardMaterial({ color: pantsHex, roughness: 0.6 });
+      const hairMat = new THREE.MeshStandardMaterial({ color: hairHex, roughness: 0.75 });
+
+      const pelvis = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.38, 0.48), pantsMat);
+      pelvis.position.y = 1.18;
+      root.add(pelvis);
+
+      const belt = new THREE.Mesh(
+        new THREE.BoxGeometry(0.9, 0.1, 0.5),
+        new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.8 })
+      );
+      belt.position.y = 0.16;
+      pelvis.add(belt);
+
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(1.02, 1.16, 0.52), shirtMat);
+      torso.position.y = 0.76;
+      pelvis.add(torso);
+
+      const jacket = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.12, 0.56), jacketMat);
+      torso.add(jacket);
+
+      const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.4, 0.24, 14, 1, true), jacketMat);
+      collar.position.y = 0.62;
+      torso.add(collar);
+
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.39, 22, 22), skinMat);
+      head.position.y = 0.94;
+      torso.add(head);
+
+      const shades = new THREE.Mesh(
+        new THREE.BoxGeometry(0.68, 0.16, 0.12),
+        new THREE.MeshStandardMaterial({ color: 0x090d16, metalness: 0.9, roughness: 0.1 })
+      );
+      shades.position.set(0, 0.05, 0.35);
+      head.add(shades);
+
+      const hair = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.34, 0.84), hairMat);
+      hair.position.set(0, 0.28, -0.03);
+      head.add(hair);
+
+      if (isFemale) {
+        const longHair = new THREE.Mesh(new THREE.BoxGeometry(0.84, 0.98, 0.4), hairMat);
+        longHair.position.set(0, -0.26, -0.25);
+        head.add(longHair);
+      }
+
+      function createLimb(x, y, upMat, lowMat, isLeg, withAura) {
+        const j1 = new THREE.Group();
+        j1.position.set(x, y, 0);
+        const up = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.14, 0.58, 12), upMat);
+        up.position.y = -0.28;
+        j1.add(up);
+
+        const j2 = new THREE.Group();
+        j2.position.y = -0.55;
+        j1.add(j2);
+        const low = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.12, 0.58, 12), lowMat);
+        low.position.y = -0.28;
+        j2.add(low);
+
+        let aura = null;
+        if (withAura) {
+          aura = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.26, 1),
+            new THREE.MeshBasicMaterial({ color: auraHex, wireframe: true, transparent: true, opacity: 0 })
+          );
+          aura.position.y = -0.55;
+          j2.add(aura);
+        }
+
+        if (isLeg) {
+          const shoe = new THREE.Mesh(
+            new THREE.BoxGeometry(0.32, 0.22, 0.56),
+            new THREE.MeshStandardMaterial({ color: 0xf8fafc })
+          );
+          shoe.position.set(0, -0.58, 0.1);
+          j2.add(shoe);
+        }
+        return { j1, j2, aura };
+      }
+
+      const lArm = createLimb(-0.69, 0.42, jacketMat, skinMat, false, true);
+      const rArm = createLimb(0.69, 0.42, jacketMat, skinMat, false, true);
+      torso.add(lArm.j1, rArm.j1);
+
+      const lLeg = createLimb(-0.26, 0, pantsMat, pantsMat, true, false);
+      const rLeg = createLimb(0.26, 0, pantsMat, pantsMat, true, true);
+      pelvis.add(lLeg.j1, rLeg.j1);
+
+      root.userData = {
+        pelvis, torso, jacket, head,
+        lArm, rArm, lLeg, rLeg,
+        pose: 'idle',
+        vy: 0,
+        hp: 100,
+        maxHp: 100,
+        blocking: false
+      };
+      return root;
+    }
+
+    function animateFighterPose(f, dt, elapsed) {
+      const u = f.userData;
+      const s = Math.min(1, dt * 18);
+      const lerp = (a, b) => a + (b - a) * s;
+
+      let t = {
+        ty: 0, tx: 0,
+        ls: 0, le: -0.2,
+        rs: 0, re: -0.2,
+        lh: 0, lk: 0,
+        rh: 0, rk: 0,
+        aura: 0
+      };
+
+      if (u.pose === 'guard') {
+        u.pelvis.position.y = 1.15 + Math.sin(elapsed * 7) * 0.05;
+        t = { ty: 0.35, tx: 0.12, ls: -0.95, le: -1.35, rs: -0.8, re: -1.45, lh: -0.28, lk: 0.35, rh: 0.28, rk: 0.25, aura: 0.2 };
+      } else if (u.pose === 'block') {
+        t = { ty: 0.1, tx: -0.12, ls: -1.35, le: -1.7, rs: -1.35, re: -1.7, lh: -0.35, lk: 0.45, rh: 0.35, rk: 0.45, aura: 0.55 };
+      } else if (u.pose === 'walk') {
+        const w = Math.sin(elapsed * 13);
+        t = {
+          ty: w * 0.15, tx: 0.08,
+          ls: -0.6 - w * 0.4, le: -1.1,
+          rs: -0.6 + w * 0.4, re: -1.1,
+          lh: w * 0.65, lk: Math.max(0, -w * 0.5),
+          rh: -w * 0.65, rk: Math.max(0, w * 0.5),
+          aura: 0.15
+        };
+      } else if (u.pose === 'jab1') {
+        t = { ty: 0.6, tx: 0.15, ls: -1.65, le: -0.05, rs: -0.6, re: -1.4, lh: -0.4, lk: 0.3, rh: 0.35, rk: 0.2, aura: 0.9 };
+      } else if (u.pose === 'jab2') {
+        t = { ty: -0.68, tx: 0.18, ls: -0.5, le: -1.3, rs: -1.7, re: -0.05, lh: -0.45, lk: 0.35, rh: 0.4, rk: 0.25, aura: 0.95 };
+      } else if (u.pose === 'kick') {
+        t = { ty: -0.45, tx: -0.35, ls: -0.8, le: -1.1, rs: 0.5, re: -0.6, lh: 0.15, lk: 0.1, rh: -1.7, rk: 0.05, aura: 1.0 };
+      } else if (u.pose === 'dorya') {
+        t = { ty: -0.8, tx: -0.28, ls: 0.3, le: -0.8, rs: -2.5, re: -0.15, lh: -0.5, lk: 0.5, rh: 0.45, rk: 0.2, aura: 1.0 };
+      } else if (u.pose === 'hitstun') {
+        t = { ty: 0, tx: -0.48, ls: 0.4, le: -0.3, rs: 0.4, re: -0.3, lh: 0.2, lk: 0.3, rh: -0.2, rk: 0.3, aura: 0 };
+      } else if (u.pose === 'ko') {
+        f.rotation.z = lerp(f.rotation.z, Math.PI / 2);
+        u.pelvis.position.y = lerp(u.pelvis.position.y, 0.35);
+        return;
+      }
+
+      f.rotation.z = lerp(f.rotation.z, 0);
+      u.torso.rotation.y = lerp(u.torso.rotation.y, t.ty);
+      u.torso.rotation.x = lerp(u.torso.rotation.x, t.tx);
+      u.lArm.j1.rotation.x = lerp(u.lArm.j1.rotation.x, t.ls);
+      u.lArm.j2.rotation.x = lerp(u.lArm.j2.rotation.x, t.le);
+      u.rArm.j1.rotation.x = lerp(u.rArm.j1.rotation.x, t.rs);
+      u.rArm.j2.rotation.x = lerp(u.rArm.j2.rotation.x, t.re);
+      u.lLeg.j1.rotation.x = lerp(u.lLeg.j1.rotation.x, t.lh);
+      u.lLeg.j2.rotation.x = lerp(u.lLeg.j2.rotation.x, t.lk);
+      u.rLeg.j1.rotation.x = lerp(u.rLeg.j1.rotation.x, t.rh);
+      u.rLeg.j2.rotation.x = lerp(u.rLeg.j2.rotation.x, t.rk);
+
+      [u.lArm.aura, u.rArm.aura, u.rLeg.aura].forEach((a) => {
+        if (a) {
+          a.material.opacity = t.aura;
+          a.rotation.y += 8 * dt;
+        }
+      });
+    }
+
+    const sumair = buildDetailedFighter({ jacketHex: 0x1d4ed8, pantsHex: 0x090d16, auraHex: 0x38bdf8 });
+    sumair.position.set(-2.6, 0, 0);
+    sumair.rotation.y = Math.PI / 2;
+    scene.add(sumair);
+
+    const bilal = buildDetailedFighter({ jacketHex: 0x059669, shirtHex: 0xfef08a, pantsHex: 0x1e293b, auraHex: 0x34d399 });
+    bilal.position.set(-4.3, 0, -2.6);
+    bilal.rotation.y = 0.55;
+    scene.add(bilal);
+
+    const maryam = buildDetailedFighter({ jacketHex: 0xdb2777, shirtHex: 0xfdf2f8, pantsHex: 0x4c0519, isFemale: true });
+    maryam.position.set(0, 0, -3.6);
+    scene.add(maryam);
+
+    const bossFighter = buildDetailedFighter({ jacketHex: 0xb91c1c, shirtHex: 0x111827, pantsHex: 0x1f2937, auraHex: 0xf43f5e, scale: 1.08 });
+    bossFighter.position.set(2.6, 0, 0);
+    bossFighter.rotation.y = -Math.PI / 2;
+    scene.add(bossFighter);
+
+    // =========================================================================
+    // 6. STORY CAMPAIGN & DRIVING PHYSICS ENGINE
+    // =========================================================================
+    let gameState = 'TITLE';
+    let activeChapter = 1;
+    let csScript = [];
+    let csStep = 0;
+    let csDoneCallback = null;
+    let camGoalPos = new THREE.Vector3(0, 3.4, 9.5);
+    let camGoalLook = new THREE.Vector3(0, 1.5, 0);
+
+    const trafficPool = [];
+    for (let i = 0; i < 6; i++) {
+      const c = buildSculptedCar({
+        bodyHex: [0xd97706, 0x2563eb, 0x10b981, 0x7c3aed, 0xe11d48, 0x090d16][i],
+        roofHex: 0x111827
+      });
+      c.visible = false;
+      scene.add(c);
+      trafficPool.push({ mesh: c, laneX: 0, z: -35 - i * 24 });
+    }
+    let driveProgress = 0;
+    let carSpeedZ = 0; // Forward speed controlled by W/S
+
+    function announce(txt) {
+      const el = document.getElementById('announcer');
+      el.textContent = txt;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 1750);
+    }
+
+    function startCutscene(lines, metaLabel, onComplete) {
+      gameState = 'CUTSCENE';
+      document.body.classList.add('cutscene-active');
+      document.getElementById('drive-hud').style.display = 'none';
+      document.getElementById('fight-hud').style.display = 'none';
+      document.getElementById('controls-bar').style.display = 'none';
+      document.getElementById('cutscene-box').style.display = 'block';
+      document.getElementById('cs-meta').textContent = metaLabel;
+
+      csScript = lines;
+      csStep = 0;
+      csDoneCallback = onComplete;
+      renderCutsceneLine();
+    }
+
+    function renderCutsceneLine() {
+      const line = csScript[csStep];
+      document.getElementById('cs-speaker').textContent = line.speaker;
+      document.getElementById('cs-speaker').style.color = line.color || '#fbbf24';
+      document.getElementById('cs-body').textContent = line.text;
+
+      if (line.cam) camGoalPos.set(...line.cam);
+      if (line.look) camGoalLook.set(...line.look);
+      if (line.lightning) triggerLightningFlash();
+
+      const actBox = document.getElementById('cs-actions');
+      actBox.innerHTML = '';
+
+      if (line.choices) {
+        line.choices.forEach((ch) => {
+          const b = document.createElement('button');
+          b.className = 'cs-btn cta';
+          b.textContent = ch.label;
+          b.onclick = ch.fn;
+          actBox.appendChild(b);
+        });
+      } else {
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'cs-btn cta';
+        nextBtn.textContent = csStep < csScript.length - 1 ? 'Continue ➔ [Space]' : 'Start Action 🔥 [Space]';
+        nextBtn.onclick = nextCutsceneLine;
+        actBox.appendChild(nextBtn);
+      }
+    }
+
+    function nextCutsceneLine() {
+      playSound('ui');
+      if (csStep < csScript.length - 1) {
+        csStep++;
+        renderCutsceneLine();
+      } else {
+        document.body.classList.remove('cutscene-active');
+        document.getElementById('cutscene-box').style.display = 'none';
+        if (csDoneCallback) csDoneCallback();
+      }
+    }
+
+    function launchChapter(chap) {
+      activeChapter = chap;
+      document.getElementById('title-screen').style.opacity = '0';
+      setTimeout(() => { document.getElementById('title-screen').style.display = 'none'; }, 400);
+
+      if (chap === 1 || chap === 4) {
+        setBillboard(chap === 1 ? 'SHAHRAH-E-FAISAL' : 'DO DARYA SEAFRONT', '11:30 PM • HIGHWAY DRIVE (W/S/A/D)', '#38bdf8');
+        sumair.visible = bilal.visible = maryam.visible = bossFighter.visible = hamzaGT.visible = false;
+        sumairAltis.visible = true;
+        sumairAltis.position.set(0, 0, 4);
+        sumairAltis.rotation.y = 0;
+        driveProgress = 0;
+        carSpeedZ = 14;
+
+        trafficPool.forEach((tc, i) => {
+          tc.mesh.visible = true;
+          tc.laneX = [-5.6, -1.9, 1.9, 5.6][i % 4];
+          tc.z = -35 - i * 25;
+          tc.mesh.position.set(tc.laneX, 0, tc.z);
+        });
+
+        startCutscene([
+          {
+            speaker: "🧢 BILAL (PASSENGER SEAT)",
+            color: "#34d399",
+            text: "Sumair bhai, [W] daba ke speed badha aur [S] se brake maar! [A] aur [D] se lane change kar ke traffic dodge kar!",
+            cam: [4.2, 2.1, 8.4],
+            look: [0, 0.9, 3.5]
+          }
+        ], chap === 1 ? "CHAPTER 1 • SHAHRAH-E-FAISAL RUSH" : "CHAPTER 4 • DO DARYA PURSUIT", () => {
+          gameState = 'DRIVE';
+          document.getElementById('drive-stage-name').textContent = chap === 1 ? '🚘 Altis 2022 • Shahrah-e-Faisal' : '🚔 Coastal Chase • Avoid Traffic!';
+          document.getElementById('drive-hud').style.display = 'block';
+          document.getElementById('controls-bar').style.display = 'flex';
+          document.getElementById('fight-buttons').style.display = 'none';
+          announce("DRIVE! USE W / S / A / D");
+        });
+      } else if (chap === 2 || chap === 3 || chap === 5 || chap === 6) {
+        trafficPool.forEach((tc) => { tc.mesh.visible = false; });
+        sumairAltis.position.set(-5.8, 0, -4.4);
+
+        if (chap === 2) {
+          sumair.visible = bilal.visible = bossFighter.visible = true;
+          maryam.visible = false;
+          bossFighter.userData.jacket.material.color.setHex(0xd97706);
+          startCutscene([{ speaker: "🥊 SHERRY", color: "#f59e0b", text: "Oye chikne! Tariq Road pe rukh!", cam: [3, 2, 4], look: [2, 1.6, 0] }], "CHAPTER 2 • TARIQ ROAD AMBUSH", () => {
+            beginTekkenBattle("SHERRY 'METER-DOWN'", 140, () => launchChapter(3));
+          });
+        } else if (chap === 3) {
+          sumair.visible = bilal.visible = maryam.visible = bossFighter.visible = true;
+          maryam.position.set(0.8, 0, -3.2);
+          bossFighter.userData.jacket.material.color.setHex(0x475569);
+          startCutscene([{ speaker: "🛡️ RAZA", color: "#94a3b8", text: "Hamza Sahab ka hukum hai ke yahan se guzro mat!", cam: [3, 2, 4], look: [2, 1.7, 0] }], "CHAPTER 3 • CLIFTON SEA VIEW", () => {
+            beginTekkenBattle("RAZA (CHIEF BOUNCER)", 175, () => launchChapter(4));
+          });
+        } else if (chap === 5) {
+          hamzaGT.visible = true;
+          sumair.visible = bilal.visible = maryam.visible = bossFighter.visible = true;
+          maryam.position.set(1.2, 0, -3.2);
+          bossFighter.userData.jacket.material.color.setHex(0x7c3aed);
+          startCutscene([{ speaker: "🥊 DANIYAL", color: "#a855f7", text: "Main DHA Fight Club ka champion hoon!", cam: [3, 2, 4], look: [2, 1.7, 0] }], "CHAPTER 5 • PENTHOUSE BETRAYAL", () => {
+            beginTekkenBattle("DANIYAL (MMA CHAMPION)", 200, () => launchChapter(6));
+          });
+        } else if (chap === 6) {
+          hamzaGT.visible = true;
+          sumair.visible = bilal.visible = maryam.visible = bossFighter.visible = true;
+          maryam.position.set(0, 0, -4.0);
+          bossFighter.userData.jacket.material.color.setHex(0xdc2626);
+          startCutscene([{ speaker: "🏎️ HAMZA", color: "#ef4444", text: "Aaj tujhe zameen chatwaunga!", cam: [3, 2, 4], look: [2, 1.7, 0] }], "FINAL CHAPTER • STORM SHOWDOWN", () => {
+            beginTekkenBattle("HAMZA_DHA (FINAL BOSS)", 260, () => triggerThreeEndings());
+          });
+        }
+      }
+    }
+
+    // =========================================================================
+    // 7. TEKKEN 8 2.5D COMBAT ENGINE
+    // =========================================================================
+    let p1Rage = 40;
+    let comboHits = 0;
+    let comboTimer = 0;
+    let hitStop = 0;
+    let camShake = 0;
+    let jabStep = 0;
+    let aiCooldown = 1.1;
+    let victoryCallback = null;
+    let rageArtActive = false;
+
+    const sparks = [];
+    const sparkGeo = new THREE.OctahedronGeometry(0.32, 0);
+
+    function emitHitSparks(x, y, z, hex, count = 10) {
+      for (let i = 0; i < count; i++) {
+        const m = new THREE.Mesh(sparkGeo, new THREE.MeshBasicMaterial({ color: hex }));
+        m.position.set(x, y, z);
+        scene.add(m);
+        sparks.push({
+          mesh: m,
+          vx: (Math.random() - 0.5) * 13,
+          vy: 2 + Math.random() * 9,
+          vz: (Math.random() - 0.5) * 9,
+          life: 0.28
+        });
+      }
+    }
+
+    function beginTekkenBattle(enemyTitle, maxHp, onVictory) {
+      gameState = 'FIGHT';
+      victoryCallback = onVictory;
+
+      sumair.position.set(-2.6, 0, 0);
+      sumair.rotation.y = Math.PI / 2;
+      sumair.userData.hp = 100;
+      sumair.userData.maxHp = 100;
+      sumair.userData.pose = 'guard';
+
+      bossFighter.position.set(2.6, 0, 0);
+      bossFighter.rotation.y = -Math.PI / 2;
+      bossFighter.rotation.z = 0;
+      bossFighter.userData.hp = maxHp;
+      bossFighter.userData.maxHp = maxHp;
+      bossFighter.userData.pose = 'guard';
+      bossFighter.userData.vy = 0;
+
+      p1Rage = 45;
+      comboHits = 0;
+
+      document.getElementById('p2-name-txt').textContent = enemyTitle;
+      document.getElementById('fight-hud').style.display = 'block';
+      document.getElementById('controls-bar').style.display = 'flex';
+      document.getElementById('fight-buttons').style.display = 'flex';
+      syncFightHUD();
+
+      announce("GET READY FOR THE NEXT BATTLE!");
+      setTimeout(() => announce("ROUND 1 • FIGHT!"), 1350);
+    }
+
+    function syncFightHUD() {
+      const p1 = Math.max(0, Math.round(sumair.userData.hp));
+      document.getElementById('p1-hp-txt').textContent = p1 + '%';
+      document.getElementById('p1-hp-bar').style.width = p1 + '%';
+      document.getElementById('p1-hp-trail').style.width = p1 + '%';
+      document.getElementById('p1-rage-fill').style.width = Math.min(100, p1Rage) + '%';
+
+      const p2 = Math.max(0, Math.round((bossFighter.userData.hp / bossFighter.userData.maxHp) * 100));
+      document.getElementById('p2-hp-txt').textContent = p2 + '%';
+      document.getElementById('p2-hp-bar').style.width = p2 + '%';
+      document.getElementById('p2-hp-trail').style.width = p2 + '%';
+    }
+
+    function playerStrike(type) {
+      if (gameState !== 'FIGHT' || rageArtActive || bossFighter.userData.hp <= 0) return;
+
+      const u = sumair.userData;
+      const dist = Math.abs(bossFighter.position.x - sumair.position.x);
+      if (dist > 1.35 && dist < 4.6) {
+        sumair.position.x += Math.sign(bossFighter.position.x - sumair.position.x) * 0.7;
+      }
+
+      if (type === 'jab') {
+        jabStep = (jabStep + 1) % 2;
+        u.pose = jabStep === 0 ? 'jab1' : 'jab2';
+        playSound('light');
+        hitOpponent({ dmg: 12, vy: 0, push: 0.45, title: 'MISHIMA FLASH STRING', color: 0x38bdf8, heavy: false });
+      } else if (type === 'kick') {
+        u.pose = 'kick';
+        playSound('heavy');
+        hitOpponent({ dmg: 22, vy: 4.8, push: 0.95, title: 'TORNADO GUARD CRUSH', color: 0x34d399, heavy: true });
+      } else if (type === 'dorya') {
+        u.pose = 'dorya';
+        playSound('electric');
+        hitOpponent({ dmg: 26, vy: 12.8, push: 0.65, title: '⚡ DORYA! ELECTRIC WIND GOD FIST', color: 0xfacc15, heavy: true });
+      } else if (type === 'bilal') {
+        playSound('heavy');
+        u.hp = Math.min(100, u.hp + 25);
+        p1Rage = Math.min(100, p1Rage + 25);
+        bilal.position.set(bossFighter.position.x - 0.9, 1.3, 0);
+        setTimeout(() => { bilal.position.set(-4.3, 0, -2.6); }, 450);
+        hitOpponent({ dmg: 24, vy: 9.0, push: 1.1, title: '🧢 BILAL FLYING ASSIST + CHAI HEAL', color: 0x22c55e, heavy: true });
+      } else if (type === 'rage') {
+        if (p1Rage < 50) {
+          announce("NEED 50% RAGE!");
+          return;
+        }
+        performRageArtCutscene();
+        return;
+      }
+
+      setTimeout(() => {
+        if (gameState === 'FIGHT' && u.hp > 0) u.pose = 'guard';
+      }, 240);
+    }
+
+    function hitOpponent({ dmg, vy, push, title, color, heavy }) {
+      const dist = Math.abs(bossFighter.position.x - sumair.position.x);
+      if (dist > 2.8) return;
+
+      const bu = bossFighter.userData;
+      const inAir = bossFighter.position.y > 0.25;
+      const finalDmg = inAir ? Math.round(dmg * 1.35) : dmg;
+
+      bu.hp = Math.max(0, bu.hp - finalDmg);
+      p1Rage = Math.min(100, p1Rage + 16);
+
+      hitStop = heavy ? 0.065 : 0.03;
+      camShake = heavy ? 0.36 : 0.16;
+
+      if (vy > 0) bu.vy = vy;
+      else if (inAir) bu.vy = Math.max(bu.vy, 5.4);
+
+      bossFighter.position.x = Math.min(7.5, bossFighter.position.x + push);
+      bu.pose = 'hitstun';
+      setTimeout(() => {
+        if (bu.hp > 0) bu.pose = 'guard';
+      }, 320);
+
+      emitHitSparks(bossFighter.position.x - 0.4, bossFighter.position.y + 1.7, 0, color, heavy ? 14 : 7);
+
+      comboHits++;
+      comboTimer = 2.3;
+      const ch = document.getElementById('combo-hud');
+      ch.style.opacity = '1';
+      document.getElementById('combo-count').textContent = `${comboHits} HIT${comboHits > 1 ? 'S' : ''}!`;
+      document.getElementById('combo-name').textContent = inAir ? `AIR JUGGLE • ${title}` : title;
+
+      syncFightHUD();
+
+      if (bu.hp <= 0) handleFightKO();
+    }
+
+    function performRageArtCutscene() {
+      rageArtActive = true;
+      p1Rage = 0;
+      syncFightHUD();
+      triggerLightningFlash();
+      announce("⚡ KARACHI KING RAGE ART!! ⚡");
+
+      camGoalPos.set(sumair.position.x + 1.1, 2.1, 2.7);
+      camGoalLook.set(sumair.position.x, 1.85, 0);
+      sumair.userData.pose = 'dorya';
+      emitHitSparks(sumair.position.x, 1.8, 0, 0x38bdf8, 18);
+
+      setTimeout(() => {
+        sumair.position.x = bossFighter.position.x - 1.05;
+        bossFighter.userData.vy = 15.5;
+        playSound('electric');
+        emitHitSparks(bossFighter.position.x, 2.3, 0, 0xfacc15, 22);
+        camGoalPos.set(bossFighter.position.x, 4.3, 6.4);
+        camGoalLook.set(bossFighter.position.x, 3.0, 0);
+      }, 650);
+
+      setTimeout(() => {
+        triggerLightningFlash();
+        bossFighter.position.y = 0;
+        bossFighter.userData.vy = 0;
+        bossFighter.userData.hp = Math.max(0, bossFighter.userData.hp - 80);
+        camShake = 0.7;
+        emitHitSparks(bossFighter.position.x, 1.2, 0, 0xef4444, 30);
+        syncFightHUD();
+        rageArtActive = false;
+        sumair.userData.pose = 'guard';
+
+        if (bossFighter.userData.hp <= 0) handleFightKO();
+      }, 1350);
+    }
+
+    function handleFightKO() {
+      bossFighter.userData.pose = 'ko';
+      triggerLightningFlash();
+      announce("K.O.!! YOU WIN!");
+      camShake = 0.55;
+
+      setTimeout(() => {
+        if (victoryCallback) victoryCallback();
+      }, 2100);
+    }
+
+    function triggerThreeEndings() {
+      startCutscene([
+        {
+          speaker: "📱 *HAMZA KA PHONE BAJTA HAI*",
+          color: "#f59e0b",
+          text: "*Zameen pe behosh pade Hamza ki jeb se Bilal uska phone uthata hai—Showroom wale ka message chamak raha hai: 'Hamza Sahab, Black GT ka kiraya 2 ghante overdue ho gaya hai!'*",
+          cam: [3.0, 2.1, 4.0],
+          look: [2.6, 0.6, 0]
+        },
+        {
+          speaker: "🧢 BILAL",
+          color: "#34d399",
+          text: "HAHAHAHA! Oye Maryam sun! Jiske liye tune Sumair ko 'chota bhai' banaya, uski toh gaadi bhi Rent-a-Car ki nikli!",
+          cam: [-2.8, 2.0, 4.2],
+          look: [0, 1.6, -2.5]
+        },
+        {
+          speaker: "👑 CHOOSE YOUR ENDING",
+          color: "#38bdf8",
+          text: "Sumair ke haath mein Diamond Pendant ka dabba aur Altis 2022 ki chabi hai. Aaj raat ki kahani kaise khatam karni hai?",
+          cam: [0, 2.6, 6.8],
+          look: [0, 1.6, -1.5],
+          choices: [
+            { label: "🚘 Ending 1: Cold CEO Walk-Off", fn: () => playEndingEpilogue(1) },
+            { label: "🎤 Ending 2: 'Maryam Baji' Rooftop Mic Roast", fn: () => playEndingEpilogue(2) }
+          ]
+        }
+      ], "FINALE • THE TRUTH REVEALED", null);
+    }
+
+    function playEndingEpilogue(num) {
+      sumair.userData.jacket.material.color.setHex(0xf59e0b);
+      const text = num === 1
+        ? "Sumair ne bina ek lafz bole Diamond Pendant wapas apni jeb mein rakha, Maryam ke paas se guzar kar apni Pearl-White Altis 2022 Special Edition start ki, aur Bilal ke sath Do Darya ki sadak par nikal gaya."
+        : "Sumair ne Penthouse DJ ka mic pakda aur announce kiya: 'Maryam Baji aur Hamza Bhai ko mangni mubarak ho!' Aur Bilal ke sath apni Altis mein Sea View chai peene nikal gaya! 🔥";
+
+      startCutscene([
+        {
+          speaker: "🎬 DIRECTOR'S CUT EPILOGUE",
+          color: "#facc15",
+          text,
+          cam: [0, 4.2, 11.5],
+          look: [0, 1.4, -2.5],
+          lightning: true,
+          choices: [{ label: "🔄 Back to Chapter Menu", fn: () => window.location.reload() }]
+        }
+      ], "KARACHI NIGHTS • RESPECT RESTORED", null);
+    }
+
+    // =========================================================================
+    // 8. INPUT LISTENERS (WORKING W / S / A / D CONTROLS)
+    // =========================================================================
+    const keys = { up: false, down: false, left: false, right: false };
+
+    window.addEventListener('keydown', (e) => {
+      const k = e.key.toLowerCase();
+      if (k === 'w' || k === 'arrowup') keys.up = true;
+      if (k === 's' || k === 'arrowdown') keys.down = true;
+      if (k === 'a' || k === 'arrowleft') keys.left = true;
+      if (k === 'd' || k === 'arrowright') keys.right = true;
+
+      if (gameState === 'CUTSCENE' && (k === ' ' || k === 'enter')) {
+        const line = csScript[csStep];
+        if (line && !line.choices) {
+          e.preventDefault();
+          nextCutsceneLine();
+        }
+      } else if (gameState === 'FIGHT') {
+        if (k === 'j') playerStrike('jab');
+        if (k === 'k') playerStrike('kick');
+        if (k === 'l') playerStrike('dorya');
+        if (k === 'u' || k === 'q') playerStrike('bilal');
+        if (k === 'r' || k === ' ') { e.preventDefault(); playerStrike('rage'); }
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const k = e.key.toLowerCase();
+      if (k === 'w' || k === 'arrowup') keys.up = false;
+      if (k === 's' || k === 'arrowdown') keys.down = false;
+      if (k === 'a' || k === 'arrowleft') keys.left = false;
+      if (k === 'd' || k === 'arrowright') keys.right = false;
+    });
+
+    // Touch button bindings for W/S/A/D
+    const btnU = document.getElementById('btn-up');
+    const btnD = document.getElementById('btn-down');
+    const bL = document.getElementById('btn-left');
+    const bR = document.getElementById('btn-right');
+
+    ['mousedown', 'touchstart'].forEach((ev) => {
+      if (btnU) btnU.addEventListener(ev, (e) => { e.preventDefault(); keys.up = true; }, { passive: false });
+      if (btnD) btnD.addEventListener(ev, (e) => { e.preventDefault(); keys.down = true; }, { passive: false });
+      bL.addEventListener(ev, (e) => { e.preventDefault(); keys.left = true; }, { passive: false });
+      bR.addEventListener(ev, (e) => { e.preventDefault(); keys.right = true; }, { passive: false });
+    });
+    ['mouseup', 'mouseleave', 'touchend'].forEach((ev) => {
+      if (btnU) btnU.addEventListener(ev, () => { keys.up = false; });
+      if (btnD) btnD.addEventListener(ev, () => { keys.down = false; });
+      bL.addEventListener(ev, () => { keys.left = false; });
+      bR.addEventListener(ev, () => { keys.right = false; });
+    });
+
+    // =========================================================================
+    // 9. MAIN 60FPS GAME LOOP
+    // =========================================================================
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const rawDt = Math.min(clock.getDelta(), 0.05);
+
+      if (hitStop > 0) {
+        hitStop -= rawDt;
+        renderer.render(scene, camera);
+        return;
+      }
+
+      const dt = rawDt;
+      const elapsed = clock.getElapsedTime();
+
+      // Rain Animation
+      const rArr = rainGeo.attributes.position.array;
+      for (let i = 1; i < rArr.length; i += 3) {
+        rArr[i] -= 30 * dt;
+        if (rArr[i] < 0) rArr[i] = 25;
+      }
+      rainGeo.attributes.position.needsUpdate = true;
+
+      if (gameState === 'TITLE') {
+        camGoalPos.set(Math.sin(elapsed * 0.32) * 9.5, 3.2, 8.8);
+        camGoalLook.set(0, 1.4, -1.5);
+      }
+
+      // DRIVING PHYSICS (Fully responsive W / S / A / D)
+      else if (gameState === 'DRIVE') {
+        // Acceleration & Braking with W / S
+        if (keys.up) carSpeedZ = Math.min(26, carSpeedZ + 12 * dt);
+        else if (keys.down) carSpeedZ = Math.max(4, carSpeedZ - 16 * dt);
+        else carSpeedZ = Math.max(12, carSpeedZ - 4 * dt); // Natural slowdown
+
+        roadTex.offset.y -= (carSpeedZ * 0.12) * dt;
+        driveProgress = Math.min(100, driveProgress + (carSpeedZ * 0.065) * dt);
+        document.getElementById('drive-fill').style.width = driveProgress + '%';
+        document.getElementById('drive-pct').textContent = Math.round(driveProgress) + '%';
+
+        // Steering with A / D
+        if (keys.left) sumairAltis.position.x = Math.max(-7.2, sumairAltis.position.x - 12 * dt);
+        if (keys.right) sumairAltis.position.x = Math.min(7.2, sumairAltis.position.x + 12 * dt);
+        sumairAltis.rotation.z = keys.left ? 0.05 : keys.right ? -0.05 : 0;
+
+        trafficPool.forEach((tc) => {
+          tc.z += (carSpeedZ + 6) * dt;
+          if (tc.z > 16) {
+            tc.z = -105;
+            tc.laneX = [-5.6, -1.9, 1.9, 5.6][Math.floor(Math.random() * 4)];
+          }
+          tc.mesh.position.set(tc.laneX, 0, tc.z);
+
+          if (Math.abs(tc.z - sumairAltis.position.z) < 3.9 && Math.abs(tc.laneX - sumairAltis.position.x) < 2.05) {
+            playSound('heavy');
+            camShake = 0.35;
+            carSpeedZ = Math.max(4, carSpeedZ - 8);
+            tc.z = -105;
+            document.getElementById('drive-radio').textContent = '🧢 Bilal: "Oye bach ke! Bumper touch ho gaya!"';
+          }
+        });
+
+        camGoalPos.set(sumairAltis.position.x * 0.55, 3.7, 11.8);
+        camGoalLook.set(sumairAltis.position.x * 0.35, 1.0, -14);
+
+        if (driveProgress >= 100) {
+          launchChapter(activeChapter === 1 ? 2 : 5);
+        }
+      }
+
+      else if (gameState === 'FIGHT') {
+        const u = sumair.userData;
+        const bu = bossFighter.userData;
+
+        if (!rageArtActive && bu.hp > 0) {
+          u.blocking = false;
+          if (keys.left) {
+            sumair.position.x = Math.max(-7.5, sumair.position.x - 6.6 * dt);
+            u.blocking = true;
+            if (u.pose === 'guard' || u.pose === 'walk') u.pose = 'block';
+          } else if (keys.right) {
+            sumair.position.x = Math.min(bossFighter.position.x - 1.2, sumair.position.x + 7.4 * dt);
+            if (u.pose === 'walk' || u.pose === 'block') u.pose = 'walk';
+          } else if (u.pose === 'walk' || u.pose === 'block') {
+            u.pose = 'guard';
+          }
+        }
+
+        if (bossFighter.position.y > 0 || bu.vy !== 0) {
+          bu.vy -= 28 * dt;
+          bossFighter.position.y = Math.max(0, bossFighter.position.y + bu.vy * dt);
+          if (bossFighter.position.y === 0) bu.vy = 0;
+        }
+
+        if (!rageArtActive && bu.hp > 0 && bossFighter.position.y === 0) {
+          const dist = bossFighter.position.x - sumair.position.x;
+          if (dist > 2.15) {
+            bossFighter.position.x -= 5.0 * dt;
+            bu.pose = 'walk';
+          } else {
+            aiCooldown -= dt;
+            if (aiCooldown <= 0) {
+              aiCooldown = 1.0 + Math.random() * 0.55;
+              bu.pose = Math.random() > 0.45 ? 'jab2' : 'kick';
+
+              if (u.blocking) {
+                playSound('ui');
+                emitHitSparks(sumair.position.x + 0.5, 1.7, 0, 0x38bdf8, 6);
+                p1Rage = Math.min(100, p1Rage + 10);
+              } else {
+                playSound('light');
+                u.hp = Math.max(15, u.hp - 9);
+                p1Rage = Math.min(100, p1Rage + 15);
+                u.pose = 'hitstun';
+                camShake = 0.22;
+                emitHitSparks(sumair.position.x + 0.4, 1.7, 0, 0xef4444, 8);
+              }
+              syncFightHUD();
+              setTimeout(() => {
+                if (bu.hp > 0) bu.pose = 'guard';
+                if (u.hp > 0) u.pose = 'guard';
+              }, 260);
+            }
+          }
+        }
+
+        if (!rageArtActive) {
+          const midX = (sumair.position.x + bossFighter.position.x) * 0.5;
+          const span = Math.abs(bossFighter.position.x - sumair.position.x);
+          camGoalPos.set(midX, 2.3 + bossFighter.position.y * 0.25, 6.7 + span * 0.45);
+          camGoalLook.set(midX, 1.55 + bossFighter.position.y * 0.3, 0);
+        }
+      }
+
+      animateFighterPose(sumair, dt, elapsed);
+      animateFighterPose(bilal, dt, elapsed);
+      animateFighterPose(maryam, dt, elapsed);
+      animateFighterPose(bossFighter, dt, elapsed);
+
+      for (let i = sparks.length - 1; i >= 0; i--) {
+        const sp = sparks[i];
+        sp.mesh.position.x += sp.vx * dt;
+        sp.mesh.position.y += sp.vy * dt;
+        sp.mesh.position.z += sp.vz * dt;
+        sp.life -= dt;
+        sp.mesh.scale.setScalar(Math.max(0.01, sp.life * 3.5));
+        if (sp.life <= 0) {
+          scene.remove(sp.mesh);
+          sparks.splice(i, 1);
+        }
+      }
+
+      if (comboTimer > 0) {
+        comboTimer -= dt;
+        if (comboTimer <= 0) {
+          comboHits = 0;
+          document.getElementById('combo-hud').style.opacity = '0';
+        }
+      }
+
+      camera.position.lerp(camGoalPos, Math.min(1, dt * 6.5));
+      if (camShake > 0) {
+        camera.position.x += (Math.random() - 0.5) * camShake;
+        camera.position.y += (Math.random() - 0.5) * camShake;
+        camShake = Math.max(0, camShake - dt * 2.2);
+      }
+      camera.lookAt(camGoalLook);
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
